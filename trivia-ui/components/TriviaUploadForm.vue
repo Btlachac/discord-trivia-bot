@@ -69,28 +69,30 @@ export default {
       };
     },
     formatTriviaData(rows) {
+
+      rows = convertRowsToSringsAndTrim(rows)
+
       this.triviaData.rounds = [];
 
       var i = 0;
       var roundNumber = 0;
       var questionNumber = 0;
 
-      this.triviaData.imageRoundTheme = trimRoundTheme(rows[20].B);
-      this.triviaData.imageRoundDetail = rows[21].B;
 
       for (i = 0; i < 52; i++) {
         var row = rows[i];
-        if (
-          row.B &&
-          row.B.toUpperCase().includes("IMAGE ROUND") &&
-          (!row.A || row.A == "")
-        ) {
+        if ((row.B && row.B.toUpperCase().includes("IMAGE ROUND")) || (row.A && row.A.toUpperCase() == "ROUND 4")) {
+          this.triviaData.imageRoundTheme = trimRoundTheme(row.B);
           i++;
-        } else if (
-          row.B &&
-          row.B.toUpperCase().startsWith("ROUND") &&
-          !row.B.toUpperCase().includes("IMAGE ROUND")
-        ) {
+          this.triviaData.imageRoundDetail = rows[i].B;
+
+
+          //We found the image round so advance counter until the start of the next round
+          while (((!rows[i+1].A || !rows[i+1].A.toUpperCase().startsWith("ROUND")) && (!rows[i+1].B || !rows[i+1].B.toUpperCase().startsWith("ROUND"))) && i < rows.length){
+            i++;
+          }
+
+        } else if ((row.B && row.B.toUpperCase().startsWith("ROUND") && !row.B.toUpperCase().includes("IMAGE ROUND")) || row.A && row.A.toUpperCase().startsWith("ROUND")) {
           questionNumber = 0;
           roundNumber++;
 
@@ -112,9 +114,9 @@ export default {
         }
       }
 
-      // const jsonString = JSON.stringify(trivia, null, 1);
+      const jsonString = JSON.stringify(this.triviaData, null, 1);
 
-      // console.log(jsonString);
+      console.log(jsonString);
 
       // this.triviaData = jsonString;
     },
@@ -127,6 +129,7 @@ export default {
 
       this.$axios.$post('trivia', this.triviaData);
     },
+
   },
 };
 
@@ -135,6 +138,15 @@ function trimRoundTheme(roundTheme) {
     roundTheme = roundTheme.split(/:(.+)/)[1];
   }
   return roundTheme;
+}
+
+function convertRowsToSringsAndTrim(rows){
+  for (let row of rows){
+    for (let prop in row){
+      row[prop] = row[prop].toString().trim();
+    }
+  }
+  return rows;
 }
 </script>
 <style>
