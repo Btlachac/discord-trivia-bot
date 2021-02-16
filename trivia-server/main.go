@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -16,8 +17,7 @@ import (
 	"github.com/rs/cors"
 )
 
-
-	// TODO: mark trivia as used
+// TODO: mark trivia as used
 
 func main() {
 	var err error
@@ -43,6 +43,7 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/trivia", createTrivia).Methods("POST")
 	router.HandleFunc("/trivia", getNewTrivia).Methods("GET")
+	router.HandleFunc("/trivia/{id:[0-9]+}/mark-used", markTriviaUsed).Methods("PUT")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -87,4 +88,13 @@ func getNewTrivia(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(trivia)
 
+}
+
+func markTriviaUsed(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+
+	triviaId, _ := strconv.ParseInt(params["id"], 10, 64)
+
+	models.MarkTriviaUsed(triviaId)
 }

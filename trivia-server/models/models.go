@@ -161,6 +161,20 @@ func AddTrivia(newTrivia Trivia) {
 
 }
 
+func MarkTriviaUsed(triviaId int64) {
+	updateTriviaStatement:= `
+	UPDATE dt.trivia
+	SET used = true,
+		date_used = CURRENT_DATE
+	WHERE id = $1`
+
+	_, err := DB.Exec(updateTriviaStatement, triviaId)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func addRound(newRound Round, triviaId int64) {
 	insertRoundStatement := `
   INSERT INTO dt.round(trivia_id, round_number, theme)
