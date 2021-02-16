@@ -1,11 +1,12 @@
 require('dotenv').config();
 const Discord = require("discord.js");
 const botCommands = require('./commands.js').botCommands;
+const utilities = require('./utilities')
 
 
 startTriviaBot(process.env.HOST_TOKEN);
 
-console.log(botCommands);
+// console.log(botCommands);
 
 
 async function startTriviaBot(token){
@@ -15,26 +16,31 @@ async function startTriviaBot(token){
     console.log(`Logged in as ${client.user.tag}!`);
   });
   
-  
+  //TODO: only read messages from bot_commands
   client.on("message", async message => {
-    // console.log(message);
 
-    let cleanMessage = message.content.trim();
+    console.log(JSON.stringify(message))
+    //Ignore messages from bots
+    if (!message.author.bot){
 
-    //Finds the command where the command text matches the message
-    const command = botCommands.find(c => c.commands.some(ct => ct.toUpperCase() === cleanMessage.toUpperCase()));
-    if (command && command !== undefined){
-      await command.function(client);
-    } else {
-      //invalid command
-      //TODO: possibly send a message that the command isn't valid
+      let cleanMessage = message.content.trim();
+
+      //Finds the command where the command text matches the message
+      const command = botCommands.find(c => c.commands.some(ct => ct.toUpperCase() === cleanMessage.toUpperCase()));
+      if (command && command !== undefined){
+        await command.function(client);
+      } else {
+        //invalid command
+        const channel = utilities.getBotCommandChannel(client);
+        channel.send(`command '${message}' is not a recognized command - type 'help' for a list of commands`);
+      }
     }
-
-
   });
 
   client.login(token);
 }
+
+
 
 // async function playTriviaRound(client, roundNumber, channelId){
 //   const round = trivia.rounds.find(r => r.roundNumber === roundNumber);
