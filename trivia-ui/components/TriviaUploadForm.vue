@@ -5,10 +5,10 @@
       v-model="imageRoundURL"
       label="Image Round URL"
     ></v-text-field>
-    <v-text-field
+    <!-- <v-text-field
       v-model="audioRoundTheme"
       label="Audio Round Theme"
-    ></v-text-field>
+    ></v-text-field> -->
 
     <v-file-input
       v-model="triviaFile"
@@ -21,6 +21,9 @@
       label="Audio Round File"
       @change="audioFileUploaded()"
     ></v-file-input>
+    <!-- <div>
+      <pre>{{ triviaString }}</pre>
+    </div> -->
 
     <v-btn @click="submit()"> Submit </v-btn>
   </v-form>
@@ -36,6 +39,7 @@ export default {
     audioRoundTheme: null,
     audioFile: null,
     audioBinary: null,
+    // triviaString: null
   }),
   methods: {
     audioFileUploaded() {
@@ -49,7 +53,6 @@ export default {
         this.audioBinary = btoa(e.target.result);
       };
     },
-    //TODO: Trim whitespace on everything - should help prevent the startsWith from breaking
     triviaFileUploaded() {
       var reader = new FileReader();
 
@@ -77,6 +80,10 @@ export default {
       var i = 0;
       var roundNumber = 0;
       var questionNumber = 0;
+
+      if (rows[53] && rows[53].B){
+        this.audioRoundTheme = rows[53].B;
+      }
 
 
       for (i = 0; i < 52; i++) {
@@ -114,17 +121,19 @@ export default {
         }
       }
 
-      const jsonString = JSON.stringify(this.triviaData, null, 1);
+      // const jsonString = JSON.stringify(this.triviaData, null, 1);
 
-      console.log(jsonString);
+      // console.log(jsonString);
 
-      // this.triviaData = jsonString;
+      // this.triviaString = jsonString;
     },
     submit() {
       this.triviaData.imageRoundURL = this.imageRoundURL;
-      this.triviaData.audioRoundTheme = this.audioRoundTheme;
       this.triviaData.answersURL = this.answersURL;
-      this.triviaData.audioBinary = this.audioBinary;
+      if (this.triviaData.audioBinary){
+        this.triviaData.audioBinary = this.audioBinary;
+        this.triviaData.audioRoundTheme = this.audioRoundTheme;
+      }
       console.log(JSON.stringify(this.triviaData));
 
       this.$axios.$post('trivia', this.triviaData);
