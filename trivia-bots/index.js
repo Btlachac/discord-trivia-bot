@@ -1,44 +1,75 @@
 require('dotenv').config();
-const Discord = require("discord.js");
-const botCommands = require('./commands.js').botCommands;
-const utilities = require('./utilities')
+const { CommandoClient } = require('discord.js-commando');
+const path = require('path');
 
 
-startTriviaBot(process.env.HOST_TOKEN);
+const client = new CommandoClient({
+  commandPrefix: '!',
+  owner: process.env.USER_ID
+});
 
-// console.log(botCommands);
 
 
-async function startTriviaBot(token){
 
-  const client = new Discord.Client();
-  client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+main(process.env.HOST_TOKEN);
+
+async function main(token){
+  client.registry
+	.registerDefaultTypes()
+	.registerGroups([
+		['main', 'main command group']
+	])
+	.registerDefaultGroups()
+	.registerDefaultCommands()
+	.registerCommandsIn(path.join(__dirname, 'commands'));
+
+
+  client.once('ready', () => {
+    console.log(`Logged in as ${client.user.tag}! (${client.user.id})`);
+    client.user.setActivity('Trivia');
   });
   
-  //TODO: only read messages from bot_commands
-  client.on("message", async message => {
-
-    console.log(JSON.stringify(message))
-    //Ignore messages from bots
-    if (!message.author.bot){
-
-      let cleanMessage = message.content.trim();
-
-      //Finds the command where the command text matches the message
-      const command = botCommands.find(c => c.commands.some(ct => ct.toUpperCase() === cleanMessage.toUpperCase()));
-      if (command && command !== undefined){
-        await command.function(client);
-      } else {
-        //invalid command
-        const channel = utilities.getBotCommandChannel(client);
-        channel.send(`command '${message}' is not a recognized command - type 'help' for a list of commands`);
-      }
-    }
-  });
+  client.on('error', console.error);
 
   client.login(token);
 }
+
+
+// startTriviaBot(process.env.HOST_TOKEN);
+
+// // console.log(botCommands);
+
+
+// async function startTriviaBot(token){
+
+//   const client = new Discord.Client();
+//   client.on('ready', () => {
+//     console.log(`Logged in as ${client.user.tag}!`);
+//   });
+  
+//   //TODO: only read messages from bot_commands
+//   client.on("message", async message => {
+
+//     console.log(JSON.stringify(message))
+//     //Ignore messages from bots
+//     if (!message.author.bot){
+
+//       let cleanMessage = message.content.trim();
+
+//       //Finds the command where the command text matches the message
+//       const command = botCommands.find(c => c.commands.some(ct => ct.toUpperCase() === cleanMessage.toUpperCase()));
+//       if (command && command !== undefined){
+//         await command.function(client);
+//       } else {
+//         //invalid command
+//         const channel = utilities.getBotCommandChannel(client);
+//         channel.send(`command '${message}' is not a recognized command - type 'help' for a list of commands`);
+//       }
+//     }
+//   });
+
+//   client.login(token);
+// }
 
 
 

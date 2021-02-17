@@ -117,7 +117,7 @@ async function getNextTrivia(client) {
   let baseUrl = process.env.API_URL;
   let response = await axios.get(`${baseUrl}/trivia`);
   trivia = response.data;
-  // console.log(JSON.stringify(trivia))
+  console.log(JSON.stringify(trivia))
 
   channel.send("Successfully retrieved new trivia");
 

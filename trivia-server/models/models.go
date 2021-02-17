@@ -20,10 +20,11 @@ type Question struct {
 }
 
 type Round struct {
-	Id          int64      `json:"id"`
-	Questions   []Question `json:"questions"`
-	RoundNumber int        `json:"roundNumber"`
-	Theme       string     `json:"theme"`
+	Id               int64      `json:"id"`
+	Questions        []Question `json:"questions"`
+	RoundNumber      int        `json:"roundNumber"`
+	Theme            string     `json:"theme"`
+	ThemeDescription string     `json:"themeDescription"`
 }
 
 type Trivia struct {
@@ -59,13 +60,12 @@ func GetNewTrivia() Trivia {
 
 	trivia.Rounds = getRounds(trivia.Id)
 
-
 	return trivia
 }
 
 func getRounds(triviaId int64) []Round {
 	selectRoundsStatement := `
-  SELECT id, round_number, theme
+  SELECT id, round_number, theme, theme_description
   FROM dt.round
   WHERE trivia_id = $1
   `
@@ -80,7 +80,7 @@ func getRounds(triviaId int64) []Round {
 	for rows.Next() {
 		var round Round
 
-		err := rows.Scan(&round.Id, &round.RoundNumber, &round.Theme)
+		err := rows.Scan(&round.Id, &round.RoundNumber, &round.Theme, &round.ThemeDescription)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -162,7 +162,7 @@ func AddTrivia(newTrivia Trivia) {
 }
 
 func MarkTriviaUsed(triviaId int64) {
-	updateTriviaStatement:= `
+	updateTriviaStatement := `
 	UPDATE dt.trivia
 	SET used = true,
 		date_used = CURRENT_DATE
@@ -177,11 +177,11 @@ func MarkTriviaUsed(triviaId int64) {
 
 func addRound(newRound Round, triviaId int64) {
 	insertRoundStatement := `
-  INSERT INTO dt.round(trivia_id, round_number, theme)
-  VALUES($1, $2, $3)
+  INSERT INTO dt.round(trivia_id, round_number, theme, theme_description)
+  VALUES($1, $2, $3, $4)
   RETURNING id`
 
-	err := DB.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme).Scan(&newRound.Id)
+	err := DB.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription).Scan(&newRound.Id)
 	if err != nil {
 		panic(err)
 	}
@@ -201,6 +201,8 @@ func addQuestion(newQuestion Question, roundId int64) {
 		panic(err)
 	}
 }
+
+//TODO: retrieving this isn't working
 
 func writeAudioFile(audioBinary string) string {
 	// fmt.Println(audioBinary)
