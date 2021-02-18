@@ -14,17 +14,20 @@
       v-model="triviaFile"
       label="Trivia Excel File"
       @change="triviaFileUploaded()"
+      accept=".xlsx"
     ></v-file-input>
 
     <v-file-input
       v-model="audioFile"
       label="Audio Round File"
       @change="audioFileUploaded()"
+      accept="audio/*"
     ></v-file-input>
     <!-- <div>
       <pre>{{ triviaString }}</pre>
     </div> -->
 
+  <!-- TODO: display the parsed trivia - preferably in some editable form -->
     <v-btn @click="submit()"> Submit </v-btn>
   </v-form>
 </template>
@@ -49,7 +52,6 @@ export default {
       reader.onload = (e) => {
         console.log("audio loaded");
         //TODO: rename variables and make this process more clear
-
         this.audioBinary = btoa(e.target.result);
       };
     },
@@ -215,10 +217,10 @@ export default {
     submit() {
       this.triviaData.imageRoundURL = this.imageRoundURL;
       this.triviaData.answersURL = this.answersURL;
-      if (this.triviaData.audioBinary) {
+      if (this.audioBinary) {
         this.triviaData.audioBinary = this.audioBinary;
-        this.triviaData.audioRoundTheme = this.audioRoundTheme;
       }
+
       console.log(JSON.stringify(this.triviaData));
 
       this.$axios.$post("trivia", this.triviaData);
