@@ -4,17 +4,17 @@ const botFunctions = require('../../botFunctions')
 module.exports = class StartTriviaCommand extends Command {
 	constructor(client) {
 		super(client, {
-			name: 'start_trivia',
-			aliases: ['start'],
+			name: 'answer_sheet',
+			aliases: ['answers'],
 			group: 'main',
-			memberName: 'start trivia',
-			description: 'Starts trivia by sending out the image round, main trivia, and the audio round',
+			memberName: 'answer sheet',
+			description: 'Send out a link to the answer sheet',
             guildOnly: true
 		});
 	}
 
     async run(message) {
-        botFunctions.startTrivia(this.client);
-        return message.say('Trivia Started')
+        botFunctions.sendAnswerSheet(this.client);
+        return message.say('Answer Sheet Sent')
     }
 };

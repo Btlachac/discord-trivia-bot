@@ -1,4 +1,4 @@
 {
     "questionDelaySeconds" : 75,
-    "imageRoundDelaySeconds": 5
+    "imageRoundDelaySeconds": 300
 }

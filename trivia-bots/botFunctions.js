@@ -2,6 +2,7 @@ const fs = require('fs');
 const utilities = require('./utilities')
 const axios = require('axios');
 const config = require('./config.json');
+const Discord = require('discord.js')
 
 var trivia = null;
 
@@ -28,7 +29,7 @@ module.exports = {
 async function startTrivia(client) {
   //If we don't currently have a trivia, get a new one
   if (trivia === null){
-    await getNextTrivia(client)
+    await getNextTrivia()
   }
 
   await sendImageRound(client);
@@ -112,15 +113,10 @@ async function sendAnswerSheet(client) {
   channel.send(trivia.answersURL);
 }
 
-async function getNextTrivia(client) {
-  const channel = utilities.getBotCommandChannel(client);
+async function getNextTrivia() {
   let baseUrl = process.env.API_URL;
   let response = await axios.get(`${baseUrl}/trivia`);
   trivia = response.data;
-  console.log(JSON.stringify(trivia))
-
-  channel.send("Successfully retrieved new trivia");
-
 }
 
 async function markTriviaUsed(client) {
@@ -139,12 +135,12 @@ async function startAudioBot(token, channelId) {
     await utilities.sleep(30);
     VC.join().then(async connection => {
       await utilities.sleep(2);
-      await connection.play(config.audioFileName);
+      await connection.play(AUDIO_FILE_LOCATION);
 
       //Bot leaves channel after 6 minutes
       await utilities.sleep(360);
-      voiceChannel.leave();
-
+      VC.leave();
+      client.destroy();
 
     }).catch(err => {
       console.log(err);
@@ -174,23 +170,27 @@ function unflattenAudioBotChannelPairings() {
     currentChannelId = process.env[`AUDIO_BOT_CHANNEL_ID_${i}`];
   }
 
-  return audioBotChannelPairings;
+  return audioBotToChannelPairings;
 }
 
 function writeAudioFile() {
-  //Delete audio file if the old one is there
-  fs.unlink(AUDIO_FILE_LOCATION);
-
   //Decode audio binary
-  let decodedAudioBinary = atob(trivia.audioBinary);
+  let decodedAudioBinary = Buffer.from(trivia.audioBinary, 'base64');
 
-  //write new audio file
-  fs.writeFile(AUDIO_FILE_LOCATION, decodedAudioBinary);
+  //write new audio file - if a file exists it will be overwritten
+  fs.writeFileSync(AUDIO_FILE_LOCATION, decodedAudioBinary);
 }
 
 async function startAudioBots(botChannelPairings) {
   for (botChannelPairing of botChannelPairings) {
-    await startAudioBot(token, channelId)
+    await startAudioBot(botChannelPairing.token, botChannelPairing.channelId)
+  }
+}
+
+async function markTriviaUsed(){
+  if (trivia){
+    let baseUrl = process.env.API_URL;
+    await axios.put(`${baseUrl}/trivia/${trivia.id}/mark-used`);
   }
 }
 

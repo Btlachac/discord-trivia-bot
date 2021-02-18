@@ -4,17 +4,17 @@ const botFunctions = require('../../botFunctions')
 module.exports = class ImageRoundCommand extends Command {
 	constructor(client) {
 		super(client, {
-			name: 'image_round',
-			aliases: ['image'],
+			name: 'next_trivia',
+			aliases: ['next'],
 			group: 'main',
-			memberName: 'image round',
-			description: 'Sends out the image round',
+			memberName: 'next trivia',
+			description: 'Fetches a new trivia',
             guildOnly: true
 		});
 	}
 
     async run(message) {
-        botFunctions.sendImageRound(this.client);
-        return message.say('Image Round Sent')
+        await botFunctions.getNextTrivia();
+        return message.say('New Trivia Fetched')
     }
 };
