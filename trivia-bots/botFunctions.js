@@ -42,8 +42,7 @@ async function startTrivia(client) {
 
   await startAudioRound(client);
 
-  // TODO: at the end of a trivia we should mark it as used in the DB and possibly null it
-  //Reasoning is that the user only erver has to type start/start_trivia each week and everything else is hidden from them
+  await markTriviaUsed();
 }
 
 async function playTriviaRound(client, roundNumber) {
@@ -84,7 +83,7 @@ async function pauseTrivia(client) {
 
 async function startAudioRound(client) {
   const channel = utilities.getTriviaChannel(client);
-  channel.send(`It's now time for the Audio round.`);
+  channel.send(`It's now time for the **Audio Round**`);
   await utilities.sleep(1);
   channel.send(trivia.audioRoundTheme);
   await utilities.sleep(1);
@@ -117,10 +116,6 @@ async function getNextTrivia() {
   let baseUrl = process.env.API_URL;
   let response = await axios.get(`${baseUrl}/trivia`);
   trivia = response.data;
-}
-
-async function markTriviaUsed(client) {
-
 }
 
 async function resumeTrivia(client) {
