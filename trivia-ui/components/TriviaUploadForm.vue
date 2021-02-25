@@ -5,11 +5,6 @@
       v-model="imageRoundURL"
       label="Image Round URL"
     ></v-text-field>
-    <!-- <v-text-field
-      v-model="audioRoundTheme"
-      label="Audio Round Theme"
-    ></v-text-field> -->
-
     <v-file-input
       v-model="triviaFile"
       label="Trivia Excel File"
@@ -23,12 +18,13 @@
       @change="audioFileUploaded()"
       accept="audio/*"
     ></v-file-input>
-    <!-- <div>
-      <pre>{{ triviaString }}</pre>
-    </div> -->
+
 
   <!-- TODO: display the parsed trivia - preferably in some editable form -->
     <v-btn @click="submit()"> Submit </v-btn>
+    <p v-if="hasErrors">
+      {{errorText}}
+    </p>
   </v-form>
 </template>
 <script>
@@ -42,8 +38,13 @@ export default {
     audioRoundTheme: null,
     audioFile: null,
     audioBinary: null,
-    // triviaString: null
+    errorText: null
   }),
+  computed: {
+    hasErrors: () => {
+      return this.errorText && this.errorText.length > 0;
+    }
+  },
   methods: {
     audioFileUploaded() {
       console.log("audio uploaded");
@@ -215,15 +216,22 @@ export default {
 
     },
     submit() {
-      this.triviaData.imageRoundURL = this.imageRoundURL;
-      this.triviaData.answersURL = this.answersURL;
-      if (this.audioBinary) {
-        this.triviaData.audioBinary = this.audioBinary;
-      }
-
       console.log(JSON.stringify(this.triviaData));
 
-      this.$axios.$post("trivia", this.triviaData);
+      if (trivia.rounds.some(r => r.questions.length !== 5)){
+        this.errorText = "Found a round with more or less than 5 questions"
+      } 
+      else {
+        this.triviaData.imageRoundURL = this.imageRoundURL;
+        this.triviaData.answersURL = this.answersURL;
+
+        if (this.audioBinary) {
+          this.triviaData.audioBinary = this.audioBinary;
+        }
+
+        this.$axios.$post("trivia", this.triviaData);
+      }
+
     },
   },
 };
@@ -244,5 +252,3 @@ function convertRowsToSringsAndTrim(rows) {
   return rows;
 }
 </script>
-<style>
-</style>
