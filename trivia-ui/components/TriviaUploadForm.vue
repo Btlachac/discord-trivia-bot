@@ -23,7 +23,7 @@
   <!-- TODO: display the parsed trivia - preferably in some editable form -->
     <v-btn @click="submit()"> Submit </v-btn>
     <p v-if="hasErrors">
-      {{errorText}}
+      {{this.errorText}}
     </p>
   </v-form>
 </template>
