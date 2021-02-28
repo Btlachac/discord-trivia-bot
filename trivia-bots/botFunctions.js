@@ -1,8 +1,8 @@
 const fs = require('fs');
 const utilities = require('./utilities')
-const axios = require('axios');
 const config = require('./config.json');
 const Discord = require('discord.js')
+const triviaService = require('./services/triviaService')
 
 var trivia = null;
 
@@ -11,14 +11,11 @@ const AUDIO_FILE_LOCATION = "./audio.mp3"
 
 module.exports = {
   startTrivia: startTrivia,
-  stopTrivia: stopTrivia,
-  pauseTrivia: pauseTrivia,
   startAudioRound: startAudioRound,
   sendImageRound: sendImageRound,
   sendAnswerSheet: sendAnswerSheet,
   getNextTrivia: getNextTrivia,
   markTriviaUsed: markTriviaUsed,
-  resumeTrivia: resumeTrivia,
 }
 
 // TODO: any method using trivia needs to null check it and send a message if we don't have a valid trivia yet
@@ -73,14 +70,6 @@ async function playTriviaRound(client, roundNumber) {
   }
 }
 
-async function stopTrivia(client) {
-
-}
-
-async function pauseTrivia(client) {
-
-}
-
 async function startAudioRound(client) {
   const channel = utilities.getTriviaChannel(client);
   channel.send(`It's now time for the **Audio Round**`);
@@ -89,7 +78,7 @@ async function startAudioRound(client) {
   await utilities.sleep(1);
   channel.send(`One of our lovely audio bots will join your channel in just a moment to play the clips, Good Luck!`);
 
-  let audioBotToChannelPairings = unflattenAudioBotChannelPairings();
+  let audioBotToChannelPairings = utilities.unflattenAudioBotChannelPairings();
 
   writeAudioFile();
 
@@ -113,15 +102,8 @@ async function sendAnswerSheet(client) {
 }
 
 async function getNextTrivia() {
-  let baseUrl = process.env.API_URL;
-  let response = await axios.get(`${baseUrl}/trivia`);
-  trivia = response.data;
+  trivia = await triviaService.getNextTrivia();
 }
-
-async function resumeTrivia(client) {
-
-}
-
 
 async function startAudioBot(token, channelId) {
   const client = new Discord.Client();
@@ -145,28 +127,7 @@ async function startAudioBot(token, channelId) {
   client.login(token);
 }
 
-function unflattenAudioBotChannelPairings() {
-  let audioBotToChannelPairings = []
 
-  let currentToken = process.env.AUDIO_BOT_TOKEN_1;
-  let currentChannelId = process.env.AUDIO_BOT_CHANNEL_ID_1;
-
-  let i = 1;
-
-  while (currentToken && currentToken.length > 0 && currentChannelId && currentChannelId.length > 0) {
-    let newPairing = {
-      token: currentToken,
-      channelId: currentChannelId
-    }
-
-    audioBotToChannelPairings.push(newPairing);
-    i++;
-    currentToken = process.env[`AUDIO_BOT_TOKEN_${i}`];
-    currentChannelId = process.env[`AUDIO_BOT_CHANNEL_ID_${i}`];
-  }
-
-  return audioBotToChannelPairings;
-}
 
 function writeAudioFile() {
   //Decode audio binary
@@ -184,8 +145,7 @@ async function startAudioBots(botChannelPairings) {
 
 async function markTriviaUsed(){
   if (trivia){
-    let baseUrl = process.env.API_URL;
-    await axios.put(`${baseUrl}/trivia/${trivia.id}/mark-used`);
+    let response = await triviaService.markTriviaUsed(trivia.id);
   }
 }
 
