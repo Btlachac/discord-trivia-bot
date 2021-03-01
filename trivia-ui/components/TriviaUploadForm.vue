@@ -41,7 +41,7 @@ export default {
     errorText: null
   }),
   computed: {
-    hasErrors: () => {
+    hasErrors() {
       return this.errorText && this.errorText.length > 0;
     }
   },
