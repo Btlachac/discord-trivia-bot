@@ -218,7 +218,7 @@ export default {
     submit() {
       console.log(JSON.stringify(this.triviaData));
 
-      if (trivia.rounds.some(r => r.questions.length !== 5)){
+      if (this.triviaData.rounds.some(r => r.questions.length !== 5)){
         this.errorText = "Found a round with more or less than 5 questions"
       } 
       else {
