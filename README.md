@@ -15,7 +15,13 @@ https://www.patreon.com/m/4171258/posts
 
 ## Future plans
 
-I'd be open to expanding the project to work with trivia from other sources if there is interest. Feel free to reach out to me if this is something you'd be interested in.
+I'm currently working through various improvements and fixes as this project is still in fairly early stages and a lot of pieces have been thrown together somewhat ad hoc.<br>
+
+A potential future improvement may be creating a Docker container to allow quicker project setup for anyone that wants to run their own trivia. <br>
+
+I'd be open to expanding the project to work with trivia from other sources if there is interest. Feel free to reach out to me if this is something you'd be interested in. <br>
+
+
 
 ## Support
 If you find any bugs or experience any issues with the project feel free to open a ticket here on github.
