@@ -4,7 +4,7 @@ This part of the project is an API used primarily for inserting new trivia from 
 
 ## Setting up Postgres
 
-TODO
+This project is set up to work with a Postgres database. The script to set up the initial database can be found under the scripts folder.
 
 ## Installation
 

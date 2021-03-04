@@ -2,17 +2,22 @@
 
 This piece of the project contains the code for the main trivia bot which handles reading commands and sending out questions, as well as the code for any audio buts to play audio rounds.
 
-## Setting up the Bots
+
+## Setting up the Discord Server
 
 In order to use this project you will need a Discord server and at least one Bot. Additionally you will need an audio bot for however many channels you'd like to have a trivia team in. Keep in mind there are various ways you could set up the bot permissions, I'm simply going tos hare how I set mine up.
 
-### Setting up primary trivia bot
+### Discord Server
 
-TODO
+I set up two channels, one for bot commands and one for the trivia questions to be read out.
+
+### Primary trivia bot
+
+The primary trivia bot needs to be able to read and write messages in the bot commands channel and be able to write to the trivia channel. I recommend only letting this bot read the bot commands channel to limit the places it can get commands from, but that is up to you.
 
 ### Setting up an audio bot
 
-TODO
+The audio bots need to be able to join the channel which they are assigned to and the ability to use voice. I also recommend making them a priority speaker.
 
 
 ## Installation
