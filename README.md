@@ -1,4 +1,4 @@
-# Discord Trivia Bot - WARNING: Not currently ready for public use
+# Discord Trivia Bot
 
 Discord Trivia Bot is an app used to run trivia through a discord bot.
 The application is made of three pieces, a UI to upload trivia through, an API to store and retrieve trivia from a Postgres database, and Javascript to run the discord bots.
