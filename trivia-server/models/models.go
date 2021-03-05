@@ -12,7 +12,9 @@ import (
 	"github.com/google/uuid"
 )
 
-var DB *sql.DB
+type Model struct {
+	*sql.DB
+}
 
 type Question struct {
 	Question       string `json:"question"`
@@ -38,7 +40,13 @@ type Trivia struct {
 	ImageRoundURL    string  `json:"imageRoundURL"`
 }
 
-func GetNewTrivia() Trivia {
+func NewModel(db *sql.DB) *Model {
+	m := Model{}
+	m.DB = db
+	return &m
+}
+
+func (m *Model) GetNewTrivia() Trivia {
 	selectTriviaStatement := `
   SELECT id, image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name
   FROM dt.trivia
@@ -49,7 +57,7 @@ func GetNewTrivia() Trivia {
 	var trivia Trivia
 	var audioFileName sql.NullString
 
-	err := DB.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileName)
+	err := m.DB.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileName)
 	if err != nil {
 		panic(err)
 	}
@@ -58,18 +66,18 @@ func GetNewTrivia() Trivia {
 		trivia.AudioBinary = getAudioBinary(audioFileName.String)
 	}
 
-	trivia.Rounds = getRounds(trivia.Id)
+	trivia.Rounds = m.getRounds(trivia.Id)
 
 	return trivia
 }
 
-func getRounds(triviaId int64) []Round {
+func (m *Model) getRounds(triviaId int64) []Round {
 	selectRoundsStatement := `
   SELECT id, round_number, theme, theme_description
   FROM dt.round
   WHERE trivia_id = $1
   `
-	rows, err := DB.Query(selectRoundsStatement, triviaId)
+	rows, err := m.DB.Query(selectRoundsStatement, triviaId)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,7 +93,7 @@ func getRounds(triviaId int64) []Round {
 			log.Fatal(err)
 		}
 
-		round.Questions = getQuestions(round.Id)
+		round.Questions = m.getQuestions(round.Id)
 
 		rounds = append(rounds, round)
 	}
@@ -93,13 +101,13 @@ func getRounds(triviaId int64) []Round {
 	return rounds
 }
 
-func getQuestions(roundId int64) []Question {
+func (m *Model) getQuestions(roundId int64) []Question {
 	selectQuestionsStatement := `
   SELECT question_number, question
   FROM dt.question
   WHERE round_id = $1
   `
-	rows, err := DB.Query(selectQuestionsStatement, roundId)
+	rows, err := m.DB.Query(selectQuestionsStatement, roundId)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -137,7 +145,7 @@ func getAudioBinary(audioFileName string) string {
 	return encodedFile
 }
 
-func AddTrivia(newTrivia Trivia) {
+func (m *Model) AddTrivia(newTrivia Trivia) {
 
 	audioFileName := ""
 
@@ -150,53 +158,53 @@ func AddTrivia(newTrivia Trivia) {
   VALUES($1, $2, $3, $4, $5, $6)
   RETURNING id`
 
-	err := DB.QueryRow(insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
+	err := m.DB.QueryRow(insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, round := range newTrivia.Rounds {
-		addRound(round, newTrivia.Id)
+		m.addRound(round, newTrivia.Id)
 	}
 
 }
 
-func MarkTriviaUsed(triviaId int64) {
+func (m *Model) MarkTriviaUsed(triviaId int64) {
 	updateTriviaStatement := `
 	UPDATE dt.trivia
 	SET used = true,
 		date_used = CURRENT_DATE
 	WHERE id = $1`
 
-	_, err := DB.Exec(updateTriviaStatement, triviaId)
+	_, err := m.DB.Exec(updateTriviaStatement, triviaId)
 	if err != nil {
 		panic(err)
 	}
 
 }
 
-func addRound(newRound Round, triviaId int64) {
+func (m *Model) addRound(newRound Round, triviaId int64) {
 	insertRoundStatement := `
   INSERT INTO dt.round(trivia_id, round_number, theme, theme_description)
   VALUES($1, $2, $3, $4)
   RETURNING id`
 
-	err := DB.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription).Scan(&newRound.Id)
+	err := m.DB.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription).Scan(&newRound.Id)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, question := range newRound.Questions {
-		addQuestion(question, newRound.Id)
+		m.addQuestion(question, newRound.Id)
 	}
 }
 
-func addQuestion(newQuestion Question, roundId int64) {
+func (m *Model) addQuestion(newQuestion Question, roundId int64) {
 	insertQuestionStatement := `
   INSERT INTO dt.question(round_id, question_number, question)
   VALUES($1, $2, $3)`
 
-	_, err := DB.Exec(insertQuestionStatement, roundId, newQuestion.QuestionNumber, newQuestion.Question)
+	_, err := m.DB.Exec(insertQuestionStatement, roundId, newQuestion.QuestionNumber, newQuestion.Question)
 	if err != nil {
 		panic(err)
 	}

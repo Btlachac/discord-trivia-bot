@@ -17,7 +17,23 @@ import (
 	"github.com/rs/cors"
 )
 
-// TODO: mark trivia as used
+type server struct {
+	db     *sql.DB
+	router *mux.Router
+	model  *models.Model
+}
+
+func newServer(db *sql.DB, router *mux.Router, model *models.Model) *server {
+	s := &server{}
+	s.db = db
+	s.router = router
+	s.model = model
+	return s
+}
+
+func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.router.ServeHTTP(w, r)
+}
 
 func main() {
 	var err error
@@ -27,6 +43,28 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	db := getDBConnection()
+
+	model := models.NewModel(db)
+
+	router := mux.NewRouter().StrictSlash(true)
+
+	s := newServer(db, router, model)
+
+	s.routes()
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(s.router)
+
+	log.Fatal(http.ListenAndServe(":8080", handler))
+
+}
+
+func getDBConnection() *sql.DB {
 	dbName := os.Getenv("DB_NAME")
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASS")
@@ -34,67 +72,53 @@ func main() {
 
 	dbConnStr := fmt.Sprintf("%s://%s:postgres@%s/%s?sslmode=disable", dbUser, dbPass, dbServer, dbName)
 
-	models.DB, err = sql.Open("postgres", dbConnStr)
+	db, err := sql.Open("postgres", dbConnStr)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/trivia", createTrivia).Methods("POST")
-	router.HandleFunc("/trivia", getNewTrivia).Methods("GET")
-	router.HandleFunc("/trivia/{id:[0-9]+}/mark-used", markTriviaUsed).Methods("PUT")
-
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowCredentials: true,
-	})
-
-	handler := c.Handler(router)
-
-	log.Fatal(http.ListenAndServe(":8080", handler))
-
+	return db
 }
 
-func createTrivia(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleTriviaCreate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	// TODO: handle incoming files
-	reqBody, err := ioutil.ReadAll(r.Body)
+		reqBody, err := ioutil.ReadAll(r.Body)
 
-	if err != nil {
-		log.Fatal(err)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var newTrivia models.Trivia
+
+		json.Unmarshal([]byte(reqBody), &newTrivia)
+
+		s.model.AddTrivia(newTrivia)
+
+		w.WriteHeader(http.StatusCreated)
+
+		json.NewEncoder(w).Encode(newTrivia)
 	}
-
-	var newTrivia models.Trivia
-
-	// fmt.Println(string(reqBody))
-
-	json.Unmarshal([]byte(reqBody), &newTrivia)
-
-	models.AddTrivia(newTrivia)
-
-	// fmt.Printf("%+v\n", newTrivia)
-	// events = append(events, newEvent)
-	w.WriteHeader(http.StatusCreated)
-
-	json.NewEncoder(w).Encode(newTrivia)
 }
 
-func getNewTrivia(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleTriviaGet() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	trivia := models.GetNewTrivia()
+		trivia := s.model.GetNewTrivia()
 
-	w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(trivia)
-
+		json.NewEncoder(w).Encode(trivia)
+	}
 }
 
-func markTriviaUsed(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleTriviaMarkUsed() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
 
-	params := mux.Vars(r)
+		triviaId, _ := strconv.ParseInt(params["id"], 10, 64)
 
-	triviaId, _ := strconv.ParseInt(params["id"], 10, 64)
-
-	models.MarkTriviaUsed(triviaId)
+		s.model.MarkTriviaUsed(triviaId)
+	}
 }
