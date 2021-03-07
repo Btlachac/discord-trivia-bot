@@ -4,7 +4,11 @@ This part of the project is an API used primarily for inserting new trivia from 
 
 ## Setting up Postgres
 
-This project is set up to work with a Postgres database. The script to set up the initial database can be found under the scripts folder.
+This project is set up to work with a Postgres database. <br>
+
+We utilize [golang-migrate](https://github.com/golang-migrate/migrate) for automatic database migrations on server start.<br>
+
+All you'll need to do is set up an empty postgres database, point the server at it, and the migrations to set up the DB will run when you start the server.
 
 ## Installation
 
