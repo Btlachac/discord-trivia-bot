@@ -1,9 +1,10 @@
-package models
+package repository
 
 import (
 	"database/sql"
 	b64 "encoding/base64"
 	"fmt"
+	"go-trivia-api/model"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,41 +13,17 @@ import (
 	"github.com/google/uuid"
 )
 
-type Model struct {
-	*sql.DB
+type TriviaRepository struct {
+	db *sql.DB
 }
 
-type Question struct {
-	Question       string `json:"question"`
-	QuestionNumber int    `json:"questionNumber"`
+func NewTriviaRepository(db *sql.DB) *TriviaRepository {
+	return &TriviaRepository{
+		db: db,
+	}
 }
 
-type Round struct {
-	Id               int64      `json:"id"`
-	Questions        []Question `json:"questions"`
-	RoundNumber      int        `json:"roundNumber"`
-	Theme            string     `json:"theme"`
-	ThemeDescription string     `json:"themeDescription"`
-}
-
-type Trivia struct {
-	Id               int64   `json:"id"`
-	Rounds           []Round `json:"rounds"`
-	AnswersURL       string  `json:"answersURL"`
-	AudioBinary      string  `json:"audioBinary"`
-	AudioRoundTheme  string  `json:"audioRoundTheme"`
-	ImageRoundDetail string  `json:"imageRoundDetail"`
-	ImageRoundTheme  string  `json:"imageRoundTheme"`
-	ImageRoundURL    string  `json:"imageRoundURL"`
-}
-
-func NewModel(db *sql.DB) *Model {
-	m := Model{}
-	m.DB = db
-	return &m
-}
-
-func (m *Model) GetNewTrivia() Trivia {
+func (repository *TriviaRepository) GetNewTrivia() model.Trivia {
 	selectTriviaStatement := `
   SELECT id, image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name
   FROM dt.trivia
@@ -54,10 +31,10 @@ func (m *Model) GetNewTrivia() Trivia {
   ORDER BY date_created ASC
   FETCH FIRST ROW ONLY`
 
-	var trivia Trivia
+	var trivia model.Trivia
 	var audioFileName sql.NullString
 
-	err := m.DB.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileName)
+	err := repository.db.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileName)
 	if err != nil {
 		panic(err)
 	}
@@ -66,34 +43,34 @@ func (m *Model) GetNewTrivia() Trivia {
 		trivia.AudioBinary = getAudioBinary(audioFileName.String)
 	}
 
-	trivia.Rounds = m.getRounds(trivia.Id)
+	trivia.Rounds = repository.getRounds(trivia.Id)
 
 	return trivia
 }
 
-func (m *Model) getRounds(triviaId int64) []Round {
+func (repository *TriviaRepository) getRounds(triviaId int64) []model.Round {
 	selectRoundsStatement := `
   SELECT id, round_number, theme, theme_description
   FROM dt.round
   WHERE trivia_id = $1
   `
-	rows, err := m.DB.Query(selectRoundsStatement, triviaId)
+	rows, err := repository.db.Query(selectRoundsStatement, triviaId)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 
-	var rounds []Round
+	var rounds []model.Round
 
 	for rows.Next() {
-		var round Round
+		var round model.Round
 
 		err := rows.Scan(&round.Id, &round.RoundNumber, &round.Theme, &round.ThemeDescription)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		round.Questions = m.getQuestions(round.Id)
+		round.Questions = repository.getQuestions(round.Id)
 
 		rounds = append(rounds, round)
 	}
@@ -101,22 +78,22 @@ func (m *Model) getRounds(triviaId int64) []Round {
 	return rounds
 }
 
-func (m *Model) getQuestions(roundId int64) []Question {
+func (repository *TriviaRepository) getQuestions(roundId int64) []model.Question {
 	selectQuestionsStatement := `
   SELECT question_number, question
   FROM dt.question
   WHERE round_id = $1
   `
-	rows, err := m.DB.Query(selectQuestionsStatement, roundId)
+	rows, err := repository.db.Query(selectQuestionsStatement, roundId)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 
-	var questions []Question
+	var questions []model.Question
 
 	for rows.Next() {
-		var question Question
+		var question model.Question
 
 		err := rows.Scan(&question.QuestionNumber, &question.Question)
 		if err != nil {
@@ -145,7 +122,7 @@ func getAudioBinary(audioFileName string) string {
 	return encodedFile
 }
 
-func (m *Model) AddTrivia(newTrivia Trivia) {
+func (repository *TriviaRepository) AddTrivia(newTrivia model.Trivia) {
 
 	audioFileName := ""
 
@@ -158,59 +135,57 @@ func (m *Model) AddTrivia(newTrivia Trivia) {
   VALUES($1, $2, $3, $4, $5, $6)
   RETURNING id`
 
-	err := m.DB.QueryRow(insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
+	err := repository.db.QueryRow(insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, round := range newTrivia.Rounds {
-		m.addRound(round, newTrivia.Id)
+		repository.addRound(round, newTrivia.Id)
 	}
 
 }
 
-func (m *Model) MarkTriviaUsed(triviaId int64) {
+func (repository *TriviaRepository) MarkTriviaUsed(triviaId int64) {
 	updateTriviaStatement := `
 	UPDATE dt.trivia
 	SET used = true,
 		date_used = CURRENT_DATE
 	WHERE id = $1`
 
-	_, err := m.DB.Exec(updateTriviaStatement, triviaId)
+	_, err := repository.db.Exec(updateTriviaStatement, triviaId)
 	if err != nil {
 		panic(err)
 	}
 
 }
 
-func (m *Model) addRound(newRound Round, triviaId int64) {
+func (repository *TriviaRepository) addRound(newRound model.Round, triviaId int64) {
 	insertRoundStatement := `
   INSERT INTO dt.round(trivia_id, round_number, theme, theme_description)
   VALUES($1, $2, $3, $4)
   RETURNING id`
 
-	err := m.DB.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription).Scan(&newRound.Id)
+	err := repository.db.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription).Scan(&newRound.Id)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, question := range newRound.Questions {
-		m.addQuestion(question, newRound.Id)
+		repository.addQuestion(question, newRound.Id)
 	}
 }
 
-func (m *Model) addQuestion(newQuestion Question, roundId int64) {
+func (repository *TriviaRepository) addQuestion(newQuestion model.Question, roundId int64) {
 	insertQuestionStatement := `
   INSERT INTO dt.question(round_id, question_number, question)
   VALUES($1, $2, $3)`
 
-	_, err := m.DB.Exec(insertQuestionStatement, roundId, newQuestion.QuestionNumber, newQuestion.Question)
+	_, err := repository.db.Exec(insertQuestionStatement, roundId, newQuestion.QuestionNumber, newQuestion.Question)
 	if err != nil {
 		panic(err)
 	}
 }
-
-//TODO: retrieving this isn't working
 
 func writeAudioFile(audioBinary string) string {
 	// fmt.Println(audioBinary)
