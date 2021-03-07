@@ -95,11 +95,10 @@ func runMigrations(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := m.Up(); err != nil {
+	err = m.Up()
+
+	if err != nil && err != migrate.ErrNoChange {
 		log.Fatal(err)
 	}
 
-	if err != nil {
-		log.Fatal(err)
-	}
 }
