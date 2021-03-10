@@ -1,22 +1,22 @@
 
 version: '3'
 services:
-  app:
-    container_name: full_app
-    build: .
+  server:
+    container_name: trivia-server
+    build: ./trivia-server
     ports: 
       - 8080:8080 
     restart: on-failure
     volumes:
       - api:/usr/src/app/
     depends_on:
-      - fullstack-postgres 
+      - db
     networks:
       - fullstack
-
-  fullstack-postgres:
+      
+  db:
     image: postgres:latest
-    container_name: full_db_postgres
+    container_name: db_postgres
     environment:
       - POSTGRES_USER=${DB_USER}  
       - POSTGRES_PASSWORD=${DB_PASS}
@@ -36,12 +36,24 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
-      - fullstack-postgres
+      - db
     ports:
       - "5050:80"
     networks:
       - fullstack
     restart: unless-stopped
+
+  ui:
+    container_name: trivia-ui
+    build: ./trivia-ui
+    ports: 
+      - 5000:5000 
+    restart: on-failure
+
+  bots:
+    container_name: trivia-bots
+    build: ./trivia-bots
+    restart: on-failure
 
 volumes:
   api:
