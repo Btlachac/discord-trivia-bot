@@ -3,6 +3,11 @@ version: '3'
 services:
   server:
     container_name: trivia-server
+    environment:
+      - DB_USER=${DB_USER}  
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - DB_SERVER=${DB_SERVER} 
     build: ./trivia-server
     ports: 
       - 8080:8080 
@@ -45,6 +50,8 @@ services:
 
   ui:
     container_name: trivia-ui
+    environment:
+      - API_URL=${API_URL}  
     build: ./trivia-ui
     ports: 
       - 5000:5000 
@@ -52,6 +59,8 @@ services:
 
   bots:
     container_name: trivia-bots
+    environment:
+      - API_URL=${API_URL}
     build: ./trivia-bots
     restart: on-failure
 
