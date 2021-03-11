@@ -8,5 +8,9 @@ WORKDIR /trivia-bots
 COPY . /trivia-bots
 RUN npm install
 
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y ffmpeg
+
 # start the app
 CMD [ "node", "index.js" ]
