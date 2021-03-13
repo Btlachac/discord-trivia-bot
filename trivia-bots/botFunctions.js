@@ -37,7 +37,12 @@ async function startTrivia(client) {
     await utilities.sleep(config.questionDelaySeconds);
   }
 
-  await startAudioRound(client);
+  sendMegaRoundReminder();
+  await utilities.sleep(10);
+
+  if (trivia.audioBinary){
+    await startAudioRound(client);
+  }
 
   await markTriviaUsed();
 }
@@ -95,10 +100,16 @@ async function sendImageRound(client) {
   channel.send(trivia.imageRoundURL);
 }
 
-async function sendAnswerSheet(client) {
+function sendAnswerSheet(client) {
   const channel = utilities.getTriviaChannel(client);
   channel.send('**Answer Sheet:**')
   channel.send(trivia.answersURL);
+}
+
+function sendMegaRoundReminder(client) {
+  const channel = utilities.getTriviaChannel(client);
+  channel.send('**Reminder about the Mega Round:**')
+  channel.send('You can pick any regular trivia round (1-6), excluding image and audio as your mega round. To do so you number your answers from 5-1 and you will get that many points if that answer is correct.')
 }
 
 async function getNextTrivia() {

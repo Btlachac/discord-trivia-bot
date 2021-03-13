@@ -13,7 +13,7 @@ module.exports = class StartTriviaCommand extends Command {
 		});
 	}
 
-    async run(message) {
+    run(message) {
         botFunctions.sendAnswerSheet(this.client);
         return message.say('Answer Sheet Sent')
     }
