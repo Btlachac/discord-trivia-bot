@@ -1,14 +1,13 @@
 <template>
   <div>
-    Home Page
+      trivia List Works
   </div>
 </template>
 
 <script>
 
-
-
 export default {
-
+  components: {
+  }
 }
 </script>
