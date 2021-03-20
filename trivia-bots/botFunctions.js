@@ -159,8 +159,8 @@ async function markTriviaUsed(){
 }
 
 function restartBot(client) {
-  await client.destroy();
-  await client.login(process.env.HOST_TOKEN);
+  client.destroy();
+  client.login(process.env.HOST_TOKEN);
 }
 
 
