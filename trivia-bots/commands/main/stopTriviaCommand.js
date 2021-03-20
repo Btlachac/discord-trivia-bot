@@ -15,5 +15,6 @@ module.exports = class StartTriviaCommand extends Command {
 
     run(message) {
         botFunctions.restartBot(this.client);
+        return message.say('Trivia Stopped')
     }
 };
