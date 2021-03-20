@@ -26,3 +26,7 @@ func (service *TriviaService) AddTrivia(newTrivia model.Trivia) {
 func (service *TriviaService) MarkTriviaUsed(triviaId int64) {
 	service.triviaRepository.MarkTriviaUsed(triviaId)
 }
+
+func (service *TriviaService) GetTriviaList() []model.TriviaInfo {
+	return service.triviaRepository.GetTriviaList()
+}

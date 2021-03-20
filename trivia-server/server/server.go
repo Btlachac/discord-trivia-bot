@@ -14,7 +14,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
 
-	// "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 )
@@ -24,17 +23,8 @@ type Server struct {
 	router        *mux.Router
 }
 
-// func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-// 	s.router.ServeHTTP(w, r)
-// }
 
 func Run() {
-	// var err error
-
-	// err = godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
 
 	router := mux.NewRouter().StrictSlash(true)
 

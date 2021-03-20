@@ -1,12 +1,6 @@
 package model
 
-import (
-	"database/sql"
-)
-
-type Model struct {
-	*sql.DB
-}
+import "time"
 
 type Question struct {
 	Question       string `json:"question"`
@@ -30,4 +24,12 @@ type Trivia struct {
 	ImageRoundDetail string  `json:"imageRoundDetail"`
 	ImageRoundTheme  string  `json:"imageRoundTheme"`
 	ImageRoundURL    string  `json:"imageRoundURL"`
+}
+
+type TriviaInfo struct {
+	Id              int64     `json:"id"`
+	DateCreated     time.Time `json:"dateCreated"`
+	Used            bool      `json:"used"`
+	DateUsed        time.Time `json:"dateUsed"`
+	ImageRoundTheme string    `json:"imageRoundTheme"`
 }

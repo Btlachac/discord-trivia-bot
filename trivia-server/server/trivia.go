@@ -52,3 +52,14 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 		s.triviaService.MarkTriviaUsed(triviaId)
 	}
 }
+
+func (s *Server) handleTriviaList() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		triviaList := s.triviaService.GetTriviaList()
+
+		w.WriteHeader(http.StatusOK)
+
+		json.NewEncoder(w).Encode(triviaList)
+	}
+}

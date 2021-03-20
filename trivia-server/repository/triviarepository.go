@@ -48,6 +48,32 @@ func (repository *TriviaRepository) GetNewTrivia() model.Trivia {
 	return trivia
 }
 
+func (repository *TriviaRepository) GetTriviaList() []model.TriviaInfo {
+	selectTriviaStatement := `
+  SELECT id, date_created, used, date_used, image_round_theme
+  FROM dt.trivia`
+
+	var triviaList []model.TriviaInfo
+
+	rows, err := repository.db.Query(selectTriviaStatement)
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var triviaInfo model.TriviaInfo
+
+		err := rows.Scan(&triviaInfo.Id, &triviaInfo.DateCreated, &triviaInfo.Used, &triviaInfo.DateUsed, &triviaInfo.ImageRoundTheme)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		triviaList = append(triviaList, triviaInfo)
+	}
+
+	return triviaList
+}
+
 func (repository *TriviaRepository) getRounds(triviaId int64) []model.Round {
 	selectRoundsStatement := `
   SELECT id, round_number, theme, theme_description

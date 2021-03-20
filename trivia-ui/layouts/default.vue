@@ -1,8 +1,10 @@
 <template>
-    <div class="container">
-        <nav-bar />
+  <div class="outer-container">
+    <div class="inner-container">
+        <nav-bar class="nav-bar" />
         <Nuxt />
     </div>
+  </div>
 </template>
 
 <script>
@@ -18,7 +20,14 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  display: flex;
+.inner-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.nav-bar {
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
