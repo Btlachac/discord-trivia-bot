@@ -24,10 +24,7 @@ module.exports = {
 
 //TODO: wrap up image, audio, and regular trivia all in this one cfunction
 async function startTrivia(client) {
-  //If we don't currently have a trivia, get a new one
-  if (trivia === null){
-    await getNextTrivia()
-  }
+  await getNextTrivia()
 
   await sendImageRound(client);
   await utilities.sleep(config.imageRoundDelaySeconds);
