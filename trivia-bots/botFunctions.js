@@ -16,6 +16,7 @@ module.exports = {
   sendAnswerSheet: sendAnswerSheet,
   getNextTrivia: getNextTrivia,
   markTriviaUsed: markTriviaUsed,
+  restartBot: restartBot
 }
 
 // TODO: any method using trivia needs to null check it and send a message if we don't have a valid trivia yet
@@ -34,7 +35,7 @@ async function startTrivia(client) {
     await utilities.sleep(config.questionDelaySeconds);
   }
 
-  sendMegaRoundReminder();
+  sendMegaRoundReminder(client);
   await utilities.sleep(10);
 
   if (trivia.audioBinary){
@@ -155,6 +156,11 @@ async function markTriviaUsed(){
   if (trivia){
     let response = await triviaService.markTriviaUsed(trivia.id);
   }
+}
+
+function restartBot(client) {
+  await client.destroy();
+  await client.login(process.env.HOST_TOKEN);
 }
 
 
