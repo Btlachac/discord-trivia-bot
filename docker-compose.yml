@@ -40,6 +40,8 @@ services:
     environment:
       - API_URL=${API_URL}  
     build: ./trivia-ui
+    volumes:
+    - ./trivia-ui:/trivia-ui/
     ports: 
       - 5000:5000 
     restart: on-failure
