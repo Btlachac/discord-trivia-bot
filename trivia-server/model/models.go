@@ -1,13 +1,5 @@
 package model
 
-import (
-	"database/sql"
-)
-
-type Model struct {
-	*sql.DB
-}
-
 type Question struct {
 	Question       string `json:"question"`
 	QuestionNumber int    `json:"questionNumber"`

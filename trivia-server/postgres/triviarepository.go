@@ -1,16 +1,9 @@
-package repository
+package postgres
 
 import (
 	"database/sql"
-	b64 "encoding/base64"
-	"fmt"
 	"go-trivia-api/model"
-	"io/ioutil"
 	"log"
-	"os"
-	"strings"
-
-	"github.com/google/uuid"
 )
 
 type TriviaRepository struct {
@@ -23,7 +16,7 @@ func NewTriviaRepository(db *sql.DB) *TriviaRepository {
 	}
 }
 
-func (repository *TriviaRepository) GetNewTrivia() model.Trivia {
+func (repository *TriviaRepository) GetNewTrivia() (model.Trivia, string) {
 	selectTriviaStatement := `
   SELECT id, image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name
   FROM dt.trivia
@@ -32,20 +25,53 @@ func (repository *TriviaRepository) GetNewTrivia() model.Trivia {
   FETCH FIRST ROW ONLY`
 
 	var trivia model.Trivia
-	var audioFileName sql.NullString
+	var audioFileNameHolder sql.NullString
+	audioFileName := ""
 
-	err := repository.db.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileName)
+	err := repository.db.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileNameHolder)
 	if err != nil {
 		panic(err)
 	}
 
-	if audioFileName.Valid && len(audioFileName.String) > 0 {
-		trivia.AudioBinary = getAudioBinary(audioFileName.String)
+	if audioFileNameHolder.Valid {
+		audioFileName = audioFileNameHolder.String
 	}
 
 	trivia.Rounds = repository.getRounds(trivia.Id)
 
-	return trivia
+	return trivia, audioFileName
+}
+
+func (repository *TriviaRepository) AddTrivia(newTrivia model.Trivia, audioFileName string) {
+
+	insertTriviaStatement := `
+  INSERT INTO dt.trivia(image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name)
+  VALUES($1, $2, $3, $4, $5, $6)
+  RETURNING id`
+
+	err := repository.db.QueryRow(insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	for _, round := range newTrivia.Rounds {
+		repository.addRound(round, newTrivia.Id)
+	}
+
+}
+
+func (repository *TriviaRepository) MarkTriviaUsed(triviaId int64) {
+	updateTriviaStatement := `
+	UPDATE dt.trivia
+	SET used = true,
+		date_used = CURRENT_DATE
+	WHERE id = $1`
+
+	_, err := repository.db.Exec(updateTriviaStatement, triviaId)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
 func (repository *TriviaRepository) getRounds(triviaId int64) []model.Round {
@@ -106,60 +132,6 @@ func (repository *TriviaRepository) getQuestions(roundId int64) []model.Question
 	return questions
 }
 
-func getAudioBinary(audioFileName string) string {
-	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
-
-	fileName := audioFileDirectory + audioFileName
-
-	content, err := ioutil.ReadFile(fileName)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	encodedFile := b64.StdEncoding.EncodeToString(content)
-
-	return encodedFile
-}
-
-func (repository *TriviaRepository) AddTrivia(newTrivia model.Trivia) {
-
-	audioFileName := ""
-
-	if len(newTrivia.AudioBinary) > 0 {
-		audioFileName = writeAudioFile(newTrivia.AudioBinary)
-	}
-
-	insertTriviaStatement := `
-  INSERT INTO dt.trivia(image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name)
-  VALUES($1, $2, $3, $4, $5, $6)
-  RETURNING id`
-
-	err := repository.db.QueryRow(insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, round := range newTrivia.Rounds {
-		repository.addRound(round, newTrivia.Id)
-	}
-
-}
-
-func (repository *TriviaRepository) MarkTriviaUsed(triviaId int64) {
-	updateTriviaStatement := `
-	UPDATE dt.trivia
-	SET used = true,
-		date_used = CURRENT_DATE
-	WHERE id = $1`
-
-	_, err := repository.db.Exec(updateTriviaStatement, triviaId)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
 func (repository *TriviaRepository) addRound(newRound model.Round, triviaId int64) {
 	insertRoundStatement := `
   INSERT INTO dt.round(trivia_id, round_number, theme, theme_description)
@@ -185,34 +157,4 @@ func (repository *TriviaRepository) addQuestion(newQuestion model.Question, roun
 	if err != nil {
 		panic(err)
 	}
-}
-
-func writeAudioFile(audioBinary string) string {
-	// fmt.Println(audioBinary)
-	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
-
-	uuidWithHyphen := uuid.New()
-	uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
-
-	fileName := uuid + ".mp3"
-
-	f, err := os.Create(audioFileDirectory + fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	sDec, _ := b64.StdEncoding.DecodeString(audioBinary)
-	data := []byte(sDec)
-
-	_, err2 := f.Write(data)
-
-	if err2 != nil {
-		log.Fatal(err2)
-	}
-
-	fmt.Println("done")
-
-	return fileName
 }
