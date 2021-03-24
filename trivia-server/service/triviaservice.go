@@ -2,7 +2,6 @@ package service
 
 import (
 	b64 "encoding/base64"
-	"fmt"
 	"go-trivia-api/model"
 	"io/ioutil"
 	"log"
@@ -17,7 +16,7 @@ type TriviaService struct {
 }
 
 type triviaRepository interface {
-	GetNewTrivia() (model.Trivia, string)
+	GetNewTrivia() (model.Trivia, string, error)
 	AddTrivia(newTrivia model.Trivia, audioFileName string)
 	MarkTriviaUsed(triviaId int64)
 }
@@ -29,7 +28,7 @@ func NewTriviaService(triviaRepository triviaRepository) *TriviaService {
 }
 
 func (service *TriviaService) GetNewTrivia() model.Trivia {
-	trivia, audioFileName := service.triviaRepository.GetNewTrivia()
+	trivia, audioFileName, _ := service.triviaRepository.GetNewTrivia()
 
 	if len(audioFileName) > 0 {
 		trivia.AudioBinary = getAudioBinary(audioFileName)
@@ -54,6 +53,8 @@ func (service *TriviaService) MarkTriviaUsed(triviaId int64) {
 func writeAudioFile(audioBinary string) string {
 	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
 
+	_ = os.Mkdir(audioFileDirectory, os.ModeDir)
+
 	uuidWithHyphen := uuid.New()
 	uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
 
@@ -61,7 +62,7 @@ func writeAudioFile(audioBinary string) string {
 
 	f, err := os.Create(audioFileDirectory + fileName)
 	if err != nil {
-		log.Panic(err)
+		log.Print(err)
 	}
 
 	defer f.Close()
@@ -72,10 +73,8 @@ func writeAudioFile(audioBinary string) string {
 	_, err2 := f.Write(data)
 
 	if err2 != nil {
-		log.Panic(err2)
+		log.Print(err2)
 	}
-
-	fmt.Println("done")
 
 	return fileName
 }

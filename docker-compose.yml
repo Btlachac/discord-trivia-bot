@@ -29,7 +29,7 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - DATABASE_HOST=${DB_SERVER} 
     ports:
-      - '5432'
+      - 54321:5432
     volumes:
       - database_postgres:/var/lib/postgresql/data
     networks:
@@ -38,20 +38,24 @@ services:
   ui:
     container_name: trivia-ui
     environment:
-      - API_URL=${API_URL}  
+      - API_URL=http://localhost:8080
     build: ./trivia-ui
     volumes:
     - ./trivia-ui:/trivia-ui/
     ports: 
       - 5000:5000 
     restart: on-failure
+    networks:
+      - fullstack
 
   bots:
     container_name: trivia-bots
     environment:
-      - API_URL=${API_URL}
+      - API_URL=http://server:8080
     build: ./trivia-bots
     restart: on-failure
+    networks:
+      - fullstack
 
 volumes:
   api:

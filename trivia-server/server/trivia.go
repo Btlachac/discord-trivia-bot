@@ -17,7 +17,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		reqBody, err := ioutil.ReadAll(r.Body)
 
 		if err != nil {
-			log.Panic(err)
+			log.Print(err)
 		}
 
 		var newTrivia model.Trivia

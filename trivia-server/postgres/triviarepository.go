@@ -16,7 +16,7 @@ func NewTriviaRepository(db *sql.DB) *TriviaRepository {
 	}
 }
 
-func (repository *TriviaRepository) GetNewTrivia() (model.Trivia, string) {
+func (repository *TriviaRepository) GetNewTrivia() (model.Trivia, string, error) {
 	selectTriviaStatement := `
   SELECT id, image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name
   FROM dt.trivia
@@ -30,16 +30,16 @@ func (repository *TriviaRepository) GetNewTrivia() (model.Trivia, string) {
 
 	err := repository.db.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileNameHolder)
 	if err != nil {
-		panic(err)
+		return trivia, audioFileName, err
 	}
 
 	if audioFileNameHolder.Valid {
 		audioFileName = audioFileNameHolder.String
 	}
 
-	trivia.Rounds = repository.getRounds(trivia.Id)
+	trivia.Rounds, err = repository.getRounds(trivia.Id)
 
-	return trivia, audioFileName
+	return trivia, audioFileName, nil
 }
 
 func (repository *TriviaRepository) AddTrivia(newTrivia model.Trivia, audioFileName string) {
@@ -74,26 +74,25 @@ func (repository *TriviaRepository) MarkTriviaUsed(triviaId int64) {
 
 }
 
-func (repository *TriviaRepository) getRounds(triviaId int64) []model.Round {
+func (repository *TriviaRepository) getRounds(triviaId int64) ([]model.Round, error) {
 	selectRoundsStatement := `
   SELECT id, round_number, theme, theme_description
   FROM dt.round
   WHERE trivia_id = $1
   `
+	var rounds []model.Round
 	rows, err := repository.db.Query(selectRoundsStatement, triviaId)
 	if err != nil {
-		log.Fatal(err)
+		return rounds, err
 	}
 	defer rows.Close()
-
-	var rounds []model.Round
 
 	for rows.Next() {
 		var round model.Round
 
 		err := rows.Scan(&round.Id, &round.RoundNumber, &round.Theme, &round.ThemeDescription)
 		if err != nil {
-			log.Fatal(err)
+			return rounds, err
 		}
 
 		round.Questions = repository.getQuestions(round.Id)
@@ -101,7 +100,7 @@ func (repository *TriviaRepository) getRounds(triviaId int64) []model.Round {
 		rounds = append(rounds, round)
 	}
 
-	return rounds
+	return rounds, nil
 }
 
 func (repository *TriviaRepository) getQuestions(roundId int64) []model.Question {
