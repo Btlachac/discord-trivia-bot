@@ -18,13 +18,21 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 
 		if err != nil {
 			log.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		var newTrivia model.Trivia
 
 		json.Unmarshal([]byte(reqBody), &newTrivia)
 
-		s.triviaService.AddTrivia(newTrivia)
+		err = s.triviaService.AddTrivia(newTrivia)
+
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		w.WriteHeader(http.StatusCreated)
 
@@ -35,7 +43,13 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 func (s *Server) handleTriviaGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		trivia := s.triviaService.GetNewTrivia()
+		trivia, err := s.triviaService.GetNewTrivia()
+
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 
@@ -47,8 +61,22 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 
-		triviaId, _ := strconv.ParseInt(params["id"], 10, 64)
+		triviaId, err := strconv.ParseInt(params["id"], 10, 64)
+
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		s.triviaService.MarkTriviaUsed(triviaId)
+
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }

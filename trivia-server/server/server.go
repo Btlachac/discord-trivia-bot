@@ -16,9 +16,9 @@ type Server struct {
 }
 
 type triviaService interface {
-	GetNewTrivia() model.Trivia
-	AddTrivia(newTrivia model.Trivia)
-	MarkTriviaUsed(triviaId int64)
+	GetNewTrivia() (model.Trivia, error)
+	AddTrivia(newTrivia model.Trivia) error
+	MarkTriviaUsed(triviaId int64) error
 }
 
 func (s *Server) Run() {
