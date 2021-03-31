@@ -23,3 +23,14 @@ type Trivia struct {
 	ImageRoundTheme  string  `json:"imageRoundTheme"`
 	ImageRoundURL    string  `json:"imageRoundURL"`
 }
+
+// func (q *Question) Validate() error {
+// 	var err error
+// 	if len(q.Question) == 0 {
+
+// 	}
+
+// 	if q.QuestionNumber < 1 || q.QuestionNumber > 5 {
+
+// 	}
+// }

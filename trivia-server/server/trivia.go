@@ -18,19 +18,25 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 
 		if err != nil {
 			log.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 			return
 		}
 
 		var newTrivia model.Trivia
 
-		json.Unmarshal([]byte(reqBody), &newTrivia)
+		err = json.Unmarshal([]byte(reqBody), &newTrivia)
+
+		if err != nil {
+			log.Print(err)
+			http.Error(w, "Failed to parse JSON body", http.StatusInternalServerError)
+			return
+		}
 
 		err = s.triviaService.AddTrivia(newTrivia)
 
 		if err != nil {
 			log.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "Failed trying to save new trivia", http.StatusInternalServerError)
 			return
 		}
 
@@ -47,7 +53,7 @@ func (s *Server) handleTriviaGet() http.HandlerFunc {
 
 		if err != nil {
 			log.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "Failed to retrive new trivia", http.StatusInternalServerError)
 			return
 		}
 
@@ -65,15 +71,15 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 
 		if err != nil {
 			log.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "Failed to parse id parameter", http.StatusInternalServerError)
 			return
 		}
 
-		s.triviaService.MarkTriviaUsed(triviaId)
+		err = s.triviaService.MarkTriviaUsed(triviaId)
 
 		if err != nil {
 			log.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "Failed to mark trivia as used", http.StatusInternalServerError)
 			return
 		}
 
