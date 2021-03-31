@@ -83,6 +83,7 @@ func (repository *TriviaRepository) getQuestions(roundId int64) []model.Question
   SELECT question_number, question
   FROM dt.question
   WHERE round_id = $1
+  ORDER BY question_number ASC
   `
 	rows, err := repository.db.Query(selectQuestionsStatement, roundId)
 	if err != nil {
