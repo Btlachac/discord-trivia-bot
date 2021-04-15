@@ -60,6 +60,8 @@ async function playTriviaRound(client, roundNumber) {
   }
   await utilities.sleep(15);
 
+  round.questions.sort((a,b) => (a.questionNumber > b.questionNumber) ? 1 : -1);
+
   var i;
   for (i = 1; i < round.questions.length + 1; i++) {
     var q = round.questions[i - 1];
