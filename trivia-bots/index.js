@@ -5,7 +5,7 @@ const path = require('path');
 
 const client = new CommandoClient({
   commandPrefix: '!',
-  owner: process.env.USER_ID
+  owner: process.env.USER_ID.split(',')
 });
 
 
