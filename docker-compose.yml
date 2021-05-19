@@ -14,7 +14,7 @@ services:
       - 8080:8080 
     restart: on-failure
     volumes:
-      - api:/usr/src/app/
+      - api:/root/
     depends_on:
       - db
     networks:
