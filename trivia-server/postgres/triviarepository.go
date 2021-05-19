@@ -114,6 +114,7 @@ func (repository *TriviaRepository) getQuestions(roundId int64) ([]model.Questio
   SELECT question_number, question
   FROM dt.question
   WHERE round_id = $1
+  ORDER BY question_number ASC
   `
 	var questions []model.Question
 
