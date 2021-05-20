@@ -40,8 +40,6 @@ services:
     environment:
       - API_URL=http://localhost:8080
     build: ./trivia-ui
-    volumes:
-    - ./trivia-ui:/trivia-ui/
     ports: 
       - 5000:5000 
     restart: on-failure
