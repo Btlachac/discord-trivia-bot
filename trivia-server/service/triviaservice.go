@@ -18,6 +18,7 @@ type triviaRepository interface {
 	GetNewTrivia() (model.Trivia, string, error)
 	AddTrivia(newTrivia model.Trivia, audioFileName string) error
 	MarkTriviaUsed(triviaId int64) error
+	RoundTypesList() ([]model.RoundType, error)
 }
 
 func NewTriviaService(triviaRepository triviaRepository) *TriviaService {
@@ -55,6 +56,10 @@ func (service *TriviaService) AddTrivia(newTrivia model.Trivia) error {
 
 func (service *TriviaService) MarkTriviaUsed(triviaId int64) error {
 	return service.triviaRepository.MarkTriviaUsed(triviaId)
+}
+
+func (service *TriviaService) RoundTypesList() ([]model.RoundType, error) {
+	return service.triviaRepository.RoundTypesList()
 }
 
 func writeAudioFile(audioBinary string) (string, error) {

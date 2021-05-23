@@ -11,6 +11,7 @@ type Round struct {
 	RoundNumber      int        `json:"roundNumber"`
 	Theme            string     `json:"theme"`
 	ThemeDescription string     `json:"themeDescription"`
+	RoundType        RoundType  `json:"roundType"`
 }
 
 type Trivia struct {
@@ -22,4 +23,9 @@ type Trivia struct {
 	ImageRoundDetail string  `json:"imageRoundDetail"`
 	ImageRoundTheme  string  `json:"imageRoundTheme"`
 	ImageRoundURL    string  `json:"imageRoundURL"`
+}
+
+type RoundType struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
 }

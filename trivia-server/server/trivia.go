@@ -86,3 +86,19 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+func (s *Server) handleRoundTypes() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		roundTypes, err := s.triviaService.RoundTypesList()
+
+		if err != nil {
+			log.Print(err)
+			http.Error(w, "Failed to retrieve round types", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(roundTypes)
+	}
+}

@@ -77,12 +77,39 @@ func (repository *TriviaRepository) MarkTriviaUsed(triviaId int64) error {
 
 }
 
+func (repository *TriviaRepository) RoundTypesList() ([]model.RoundType, error) {
+	selectStatement := `
+	SELECT id, name
+	FROM dt.round_type
+	`
+
+	var roundTypes []model.RoundType
+	rows, err := repository.db.Query(selectStatement)
+	if err != nil {
+		return roundTypes, &model.QueryError{Query: selectStatement, Err: err}
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var roundType model.RoundType
+
+		err := rows.Scan(&roundType.Id, &roundType.Name)
+		if err != nil {
+			return roundTypes, &model.QueryError{Query: selectStatement, Err: err}
+		}
+
+		roundTypes = append(roundTypes, roundType)
+	}
+
+	return roundTypes, nil
+}
+
 func (repository *TriviaRepository) getRounds(triviaId int64) ([]model.Round, error) {
 	selectRoundsStatement := `
-  SELECT id, round_number, theme, theme_description
-  FROM dt.round
-  WHERE trivia_id = $1
-  `
+	SELECT r.id, r.round_number, r.theme, r.theme_description, rt.name
+	FROM dt.round r JOIN dt.round_type rt ON r.round_type_id = rt.id
+	WHERE trivia_id = $1
+	`
 	var rounds []model.Round
 	rows, err := repository.db.Query(selectRoundsStatement, triviaId)
 	if err != nil {
@@ -93,7 +120,7 @@ func (repository *TriviaRepository) getRounds(triviaId int64) ([]model.Round, er
 	for rows.Next() {
 		var round model.Round
 
-		err := rows.Scan(&round.Id, &round.RoundNumber, &round.Theme, &round.ThemeDescription)
+		err := rows.Scan(&round.Id, &round.RoundNumber, &round.Theme, &round.ThemeDescription, &round.RoundType.Name)
 		if err != nil {
 			return rounds, &model.QueryError{Query: selectRoundsStatement, Err: err}
 		}
@@ -140,11 +167,11 @@ func (repository *TriviaRepository) getQuestions(roundId int64) ([]model.Questio
 
 func (repository *TriviaRepository) addRound(newRound model.Round, triviaId int64) error {
 	insertRoundStatement := `
-  INSERT INTO dt.round(trivia_id, round_number, theme, theme_description)
-  VALUES($1, $2, $3, $4)
+  INSERT INTO dt.round(trivia_id, round_number, theme, theme_description, round_type_id)
+  VALUES($1, $2, $3, $4, $5)
   RETURNING id`
 
-	err := repository.db.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription).Scan(&newRound.Id)
+	err := repository.db.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription, newRound.RoundType.Id).Scan(&newRound.Id)
 	if err != nil {
 		return &model.QueryError{Query: insertRoundStatement, Err: err}
 	}

@@ -19,6 +19,7 @@ type triviaService interface {
 	GetNewTrivia() (model.Trivia, error)
 	AddTrivia(newTrivia model.Trivia) error
 	MarkTriviaUsed(triviaId int64) error
+	RoundTypesList() ([]model.RoundType, error)
 }
 
 func (s *Server) Run() {
