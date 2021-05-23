@@ -4,6 +4,9 @@ FROM node:14.15.4
 RUN mkdir -p /trivia-ui
 WORKDIR /trivia-ui
 
+ARG API_URL
+ENV API_URL=$API_URL
+
 # copy the app, note .dockerignore
 COPY . /trivia-ui
 RUN npm install
