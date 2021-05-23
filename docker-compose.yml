@@ -40,7 +40,7 @@ services:
     build: 
       context: ./trivia-ui
       args:
-        - API_URL=http://localhost:8080
+        - API_URL=${API_URL}
     ports: 
       - 5000:5000 
     restart: on-failure
@@ -50,7 +50,7 @@ services:
   bots:
     container_name: trivia-bots
     environment:
-      - API_URL="http://server:8080"
+      - API_URL=${API_URL}
     build: ./trivia-bots
     restart: on-failure
     networks:
