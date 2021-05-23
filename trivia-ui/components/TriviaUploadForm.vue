@@ -38,8 +38,13 @@ export default {
     audioRoundTheme: null,
     audioFile: null,
     audioBinary: null,
-    errorText: null
+    errorText: null,
+    roundTypes: []
   }),
+  async fetch() {
+    this.roundTypes = await this.$axios.$get("trivia/roundTypes");
+    console.log(this.roundTypes);
+  },
   computed: {
     hasErrors() {
       return this.errorText && this.errorText.length > 0;
@@ -47,12 +52,9 @@ export default {
   },
   methods: {
     audioFileUploaded() {
-      console.log("audio uploaded");
       var reader = new FileReader();
       reader.readAsBinaryString(this.audioFile);
       reader.onload = (e) => {
-        console.log("audio loaded");
-        //TODO: rename variables and make this process more clear
         this.audioBinary = btoa(e.target.result);
       };
     },
@@ -125,11 +127,23 @@ export default {
           questionNumber = 0;
           roundNumber++;
 
+          let roundType = null;
+
+          if (row.b.toUpperCase == "LIST ROUND") {
+            roundType = this.roundTypes.find(r => r.name.toUpperCase() == "LIST");
+          }
+
+          if (!roundType) {
+            roundType = this.roundTypes.find(r => r.name.toUpperCase() == "REGULAR");
+          }
+
           this.triviaData.rounds[roundNumber - 1] = {
             roundNumber: roundNumber,
             theme: trimRoundTheme(row.B),
             questions: [],
+            roundType: roundType
           };
+
         } else if ((!row.A || row.A == "") && (!row.C || row.C == "")) {
           this.triviaData.rounds[roundNumber - 1].themeDescription = row.B;
         } else if (row.B && row.B != "") {
@@ -153,8 +167,6 @@ export default {
       console.log('Using source sheet')
 
       rows = convertRowsToSringsAndTrim(rows);
-
-      // console.log(JSON.stringify(rows, 0 ,1))
 
       this.triviaData.rounds = [];
 
@@ -189,10 +201,28 @@ export default {
           roundNumber++;
           questionNumber = 1;
 
+          let roundType = null;
+
+          console.log(this.roundTypes);
+
+          if (row.round_type && row.round_type.toUpperCase() == "LIGHTNING ROUND") {
+            roundType = this.roundTypes.find(r => r.name.toUpperCase() == "LIGHTNING");
+          } 
+          else if ((row.other_tags && row.other_tags.toUpperCase == "LIST ROUND") || (row.round_title && row.round_title.toUpperCase() == "LIST ROUND")) {
+            roundType = this.roundTypes.find(r => r.name.toUpperCase() == "LIST");
+          }
+
+          if (!roundType) {
+            roundType = this.roundTypes.find(r => r.name.toUpperCase() == "REGULAR");
+          }
+
+          console.log(roundType)
+
           let newRound = {
             roundNumber: roundNumber,
             theme: row.round_title,
             questions: [],
+            roundType: roundType
           };
 
           if (row.round_description && row.round_description.length > 0) {

@@ -27,10 +27,13 @@ module.exports = {
 async function startTrivia(client) {
   await getNextTrivia()
 
+  await sendTriviaOverview(client);
+  await utilities.sleep(20);
+
   await sendImageRound(client);
   await utilities.sleep(config.imageRoundDelaySeconds);
 
-  for (var i=1; i <= 6; i++){
+  for (var i=1; i <= trivia.rounds.length; i++){
     await playTriviaRound(client, i);
     await utilities.sleep(config.questionDelaySeconds);
   }
@@ -49,8 +52,20 @@ async function playTriviaRound(client, roundNumber) {
   const round = trivia.rounds.find(r => r.roundNumber === roundNumber);
   const channel = utilities.getTriviaChannel(client);
 
+  let questionDelay = config.questionDelaySeconds;
+
+  if (round.roundType.name.toUpperCase() == "LIGHTNING"){
+    questionDelay = 5;
+  }
+
+
   channel.send(`We will now begin **Round ${roundNumber}**`);
   await utilities.sleep(1);
+
+  if (round.roundType.name.toUpperCase() == "LIST"){
+    channel.send("This is a List Round! It's one question with multiple correct answers... teams get 1 point for each correct answer they write down. ");
+    await utilities.sleep(1);
+  }
   if (round.theme && round.theme.length > 0) {
     channel.send(`The theme for this round is **${round.theme}**`);
     await utilities.sleep(1);
@@ -58,22 +73,28 @@ async function playTriviaRound(client, roundNumber) {
   if (round.themeDescription && round.themeDescription.length > 0) {
     channel.send(round.themeDescription)
   }
+
   await utilities.sleep(15);
 
   round.questions.sort((a,b) => (a.questionNumber > b.questionNumber) ? 1 : -1);
 
-  var i;
-  for (i = 1; i < round.questions.length + 1; i++) {
-    var q = round.questions[i - 1];
-    channel.send(`**Question ${q.questionNumber}: ** ${q.question}`);
-    if (roundNumber != 5) {
-      await utilities.sleep(config.questionDelaySeconds);
-
-    } else {
-      await utilities.sleep(5);
+  if (round.roundType.name.toUpperCase() == "LIST"){
+    var q = round.questions[0];
+    channel.send(`**Question: ** ${q.question}`);
+    await utilities.sleep(questionDelay * 2);
+  }
+  else {
+    var i;
+    for (i = 1; i < round.questions.length + 1; i++) {
+      var q = round.questions[i - 1];
+      channel.send(`**Question ${q.questionNumber}: ** ${q.question}`);
+      await utilities.sleep(questionDelay);
     }
   }
+
+
 }
+
 
 async function startAudioRound(client) {
   const channel = utilities.getTriviaChannel(client);
@@ -100,6 +121,26 @@ async function sendImageRound(client) {
   channel.send(trivia.imageRoundURL);
 }
 
+async function sendTriviaOverview(client) {
+  const channel = utilities.getTriviaChannel(client);
+  channel.send(`**Trivia Overview:**`)
+  let overviewMessage = "Welcome to Trivia, tonight's game will include:\n"
+  
+  if (trivia.imageRoundURL && trivia.imageRoundURL.length > 0){
+    overviewMessage += "- An Image Round\n"
+  }
+
+  overviewMessage += `- ${trivia.rounds.length} Rounds of regular trivia\n`
+
+  if (trivia.audioBinary){
+    overviewMessage += "- An Audio Round\n"
+  }
+
+  channel.send(overviewMessage);
+}
+
+
+
 function sendAnswerSheet(client) {
   const channel = utilities.getTriviaChannel(client);
   channel.send('**Answer Sheet:**')
@@ -109,7 +150,7 @@ function sendAnswerSheet(client) {
 function sendMegaRoundReminder(client) {
   const channel = utilities.getTriviaChannel(client);
   channel.send('**Reminder about the Mega Round:**')
-  channel.send('You can pick any regular trivia round (1-6), excluding image and audio as your mega round. To do so you number your answers from 5-1 and you will get that many points if that answer is correct.')
+  channel.send('You can pick any regular trivia round as your mega round, **excluding** the **list round**, the **image round** and the **audio round**. To do so you number your answers from 5-1 and you will get that many points if that answer is correct.')
 }
 
 async function getNextTrivia() {
