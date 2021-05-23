@@ -14,7 +14,7 @@ services:
       - 8080:8080 
     restart: on-failure
     volumes:
-      - api:/root/
+      - api:${AUDIO_FILE_DIRECTORY}
     depends_on:
       - db
     networks:

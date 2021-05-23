@@ -60,10 +60,6 @@ func (service *TriviaService) MarkTriviaUsed(triviaId int64) error {
 func writeAudioFile(audioBinary string) (string, error) {
 	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
 
-	if _, err := os.Stat(audioFileDirectory); os.IsNotExist(err) {
-		os.Mkdir(audioFileDirectory, os.ModeDir)
-	}
-
 	uuidWithHyphen := uuid.New()
 	uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
 
