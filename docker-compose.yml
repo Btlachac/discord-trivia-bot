@@ -1,51 +1,51 @@
 
 version: '3'
 services:
-  server:
-    container_name: trivia-server
-    environment:
-      - DB_USER=${DB_USER}  
-      - DB_PASS=${DB_PASS}
-      - DB_NAME=${DB_NAME}
-      - DB_SERVER=${DB_SERVER} 
-      - AUDIO_FILE_DIRECTORY=${AUDIO_FILE_DIRECTORY}
-    build: ./trivia-server
-    ports: 
-      - 8080:8080 
-    restart: on-failure
-    volumes:
-      - api:${AUDIO_FILE_DIRECTORY}
-    depends_on:
-      - db
-    networks:
-      - fullstack
+  # server:
+  #   container_name: trivia-server
+  #   environment:
+  #     - DB_USER=${DB_USER}  
+  #     - DB_PASS=${DB_PASS}
+  #     - DB_NAME=${DB_NAME}
+  #     - DB_SERVER=${DB_SERVER} 
+  #     - AUDIO_FILE_DIRECTORY=${AUDIO_FILE_DIRECTORY}
+  #   build: ./trivia-server
+  #   ports: 
+  #     - 8080:8080 
+  #   restart: on-failure
+  #   volumes:
+  #     - api:${AUDIO_FILE_DIRECTORY}
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - fullstack
       
-  db:
-    image: postgres:latest
-    container_name: db_postgres
-    environment:
-      - POSTGRES_USER=${DB_USER}  
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_SERVER} 
-    ports:
-      - 54321:5432
-    volumes:
-      - database_postgres:/var/lib/postgresql/data
-    networks:
-      - fullstack
+  # db:
+  #   image: postgres:latest
+  #   container_name: db_postgres
+  #   environment:
+  #     - POSTGRES_USER=${DB_USER}  
+  #     - POSTGRES_PASSWORD=${DB_PASS}
+  #     - POSTGRES_DB=${DB_NAME}
+  #     - DATABASE_HOST=${DB_SERVER} 
+  #   ports:
+  #     - 54321:5432
+  #   volumes:
+  #     - database_postgres:/var/lib/postgresql/data
+  #   networks:
+  #     - fullstack
       
-  ui:
-    container_name: trivia-ui
-    build: 
-      context: ./trivia-ui
-      args:
-        - API_URL=${API_URL}
-    ports: 
-      - 5000:5000 
-    restart: on-failure
-    networks:
-      - fullstack
+  # ui:
+  #   container_name: trivia-ui
+  #   build: 
+  #     context: ./trivia-ui
+  #     args:
+  #       - API_URL=${API_URL}
+  #   ports: 
+  #     - 5000:5000 
+  #   restart: on-failure
+  #   networks:
+  #     - fullstack
 
   bots:
     container_name: trivia-bots
@@ -53,14 +53,14 @@ services:
       - API_URL=${API_URL}
     build: ./trivia-bots
     restart: on-failure
-    networks:
-      - fullstack
+    # networks:
+    #   - fullstack
 
-volumes:
-  api:
-  database_postgres:   
+# volumes:
+#   api:
+#   database_postgres:   
 
-# Networks to be created to facilitate communication between containers
-networks:
-  fullstack:
-    driver: bridge
+# # Networks to be created to facilitate communication between containers
+# networks:
+#   fullstack:
+#     driver: bridge
