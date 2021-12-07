@@ -6,7 +6,7 @@ const triviaService = require('./services/triviaService')
 
 var trivia = null;
 
-const AUDIO_FILE_LOCATION = "./audio.mp3"
+const AUDIO_FILE_LOCATION = "./audio.ogg"
 
 
 module.exports = {
@@ -97,16 +97,16 @@ async function playTriviaRound(client, roundNumber) {
 
 
 async function startAudioRound(client) {
-  const channel = utilities.getTriviaChannel(client);
-  channel.send(`It's now time for the **Audio Round**`);
-  await utilities.sleep(1);
-  channel.send(trivia.audioRoundTheme);
-  await utilities.sleep(1);
-  channel.send(`One of our lovely audio bots will join your channel in just a moment to play the clips, Good Luck!`);
+  // const channel = utilities.getTriviaChannel(client);
+  // channel.send(`It's now time for the **Audio Round**`);
+  // await utilities.sleep(1);
+  // channel.send(trivia.audioRoundTheme);
+  // await utilities.sleep(1);
+  // channel.send(`One of our lovely audio bots will join your channel in just a moment to play the clips, Good Luck!`);
 
   let audioBotToChannelPairings = utilities.unflattenAudioBotChannelPairings();
 
-  writeAudioFile();
+  // writeAudioFile();
 
   await startAudioBots(audioBotToChannelPairings);
 }
@@ -161,9 +161,9 @@ async function startAudioBot(token, channelId) {
   const client = new Discord.Client();
   client.on('ready', async () => {
     const VC = client.channels.cache.get(channelId);
-    await utilities.sleep(30);
+    // await utilities.sleep(30);
     VC.join().then(async connection => {
-      await utilities.sleep(2);
+      // await utilities.sleep(2);
       await connection.play(AUDIO_FILE_LOCATION);
 
       //Bot leaves channel after 6 minutes
