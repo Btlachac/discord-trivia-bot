@@ -1,7 +1,7 @@
 package server
 
 import (
-	"go-trivia-api/model"
+	db "go-trivia-api/postgres"
 	"log"
 	"net/http"
 
@@ -16,10 +16,10 @@ type Server struct {
 }
 
 type triviaService interface {
-	GetNewTrivia() (model.Trivia, error)
-	AddTrivia(newTrivia model.Trivia) error
+	GetNewTrivia() (db.Trivia, error)
+	AddTrivia(newTrivia db.Trivia) error
 	MarkTriviaUsed(triviaId int64) error
-	RoundTypesList() ([]model.RoundType, error)
+	RoundTypesList() ([]db.RoundType, error)
 }
 
 func (s *Server) Run() {

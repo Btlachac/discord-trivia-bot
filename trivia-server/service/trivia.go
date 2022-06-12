@@ -1,8 +1,8 @@
-package service
+package s
 
 import (
 	b64 "encoding/base64"
-	"go-trivia-api/model"
+	db "go-trivia-api/postgres"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -11,24 +11,17 @@ import (
 )
 
 type TriviaService struct {
-	triviaRepository triviaRepository
+	triviaDB db.TriviaDB
 }
 
-type triviaRepository interface {
-	GetNewTrivia() (model.Trivia, string, error)
-	AddTrivia(newTrivia model.Trivia, audioFileName string) error
-	MarkTriviaUsed(triviaId int64) error
-	RoundTypesList() ([]model.RoundType, error)
-}
-
-func NewTriviaService(triviaRepository triviaRepository) *TriviaService {
+func NewTriviaService(triviaDB db.TriviaDB) *TriviaService {
 	return &TriviaService{
-		triviaRepository: triviaRepository,
+		triviaDB: triviaDB,
 	}
 }
 
-func (service *TriviaService) GetNewTrivia() (model.Trivia, error) {
-	trivia, audioFileName, err := service.triviaRepository.GetNewTrivia()
+func (s *TriviaService) GetNewTrivia() (*db.Trivia, error) {
+	trivia, audioFileName, err := s.triviaDB.GetNewTrivia()
 
 	if err != nil {
 		return trivia, err
@@ -41,7 +34,7 @@ func (service *TriviaService) GetNewTrivia() (model.Trivia, error) {
 	return trivia, err
 }
 
-func (service *TriviaService) AddTrivia(newTrivia model.Trivia) error {
+func (s *TriviaService) AddTrivia(newTrivia *db.Trivia) error {
 	audioFileName := ""
 	var err error
 	if len(newTrivia.AudioBinary) > 0 {
@@ -51,15 +44,15 @@ func (service *TriviaService) AddTrivia(newTrivia model.Trivia) error {
 		}
 	}
 
-	return service.triviaRepository.AddTrivia(newTrivia, audioFileName)
+	return s.triviaDB.AddTrivia(newTrivia, audioFileName)
 }
 
-func (service *TriviaService) MarkTriviaUsed(triviaId int64) error {
-	return service.triviaRepository.MarkTriviaUsed(triviaId)
+func (s *TriviaService) MarkTriviaUsed(triviaId int64) error {
+	return s.triviaDB.MarkTriviaUsed(triviaId)
 }
 
-func (service *TriviaService) RoundTypesList() ([]model.RoundType, error) {
-	return service.triviaRepository.RoundTypesList()
+func (s *TriviaService) RoundTypesList() ([]*db.RoundType, error) {
+	return s.triviaDB.RoundTypesList()
 }
 
 func writeAudioFile(audioBinary string) (string, error) {
