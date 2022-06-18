@@ -3,11 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"go-trivia-api/postgres"
-	"go-trivia-api/server"
-	"go-trivia-api/service"
 	"log"
 	"os"
+
+	"github.com/Btlachac/discord-trivia-bot/postgres"
+	"github.com/Btlachac/discord-trivia-bot/service"
+	"github.com/Btlachac/discord-trivia-bot/worker/server"
 
 	"github.com/golang-migrate/migrate/v4"
 	pgMigrate "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -20,7 +21,8 @@ func main() {
 	db := getDBConnection()
 	runMigrations(db)
 
-	ts := createTriviaService(db)
+	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
+	ts := createTriviaService(db, audioFileDirectory)
 
 	s := server.NewServer(router, ts)
 
@@ -60,8 +62,8 @@ func runMigrations(db *sql.DB) {
 	}
 }
 
-func createTriviaService(db *sql.DB) *service.TriviaService {
+func createTriviaService(db *sql.DB, audioFileDirectory string) *service.TriviaService {
 	repository := postgres.NewTriviaRepository(db)
-	service := service.NewTriviaService(repository)
+	service := service.NewTriviaService(repository, audioFileDirectory)
 	return service
 }

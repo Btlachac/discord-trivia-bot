@@ -1,25 +1,18 @@
 package server
 
 import (
-	db "go-trivia-api/postgres"
 	"log"
 	"net/http"
 
+	"github.com/Btlachac/discord-trivia-bot/service"
 	"github.com/gorilla/mux"
 
 	"github.com/rs/cors"
 )
 
 type Server struct {
-	triviaService triviaService
+	triviaService service.Service
 	router        *mux.Router
-}
-
-type triviaService interface {
-	GetNewTrivia() (db.Trivia, error)
-	AddTrivia(newTrivia db.Trivia) error
-	MarkTriviaUsed(triviaId int64) error
-	RoundTypesList() ([]db.RoundType, error)
 }
 
 func (s *Server) Run() {
@@ -34,7 +27,7 @@ func (s *Server) Run() {
 
 }
 
-func NewServer(router *mux.Router, triviaService triviaService) *Server {
+func NewServer(router *mux.Router, triviaService service.Service) *Server {
 	s := &Server{
 		router:        router,
 		triviaService: triviaService,

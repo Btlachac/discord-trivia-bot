@@ -3,3 +3,9 @@ build-server:
 
 run-server:
 	go run cmd/server/main.go
+
+vendor:
+	go mod vendor
+
+gen: 
+	go generate ./..

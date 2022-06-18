@@ -1,22 +1,27 @@
-package s
+package service
 
 import (
+	"context"
 	b64 "encoding/base64"
-	db "go-trivia-api/postgres"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	db "github.com/Btlachac/discord-trivia-bot/postgres"
 
 	"github.com/google/uuid"
 )
 
 type TriviaService struct {
-	triviaDB db.TriviaDB
+	triviaDB           db.TriviaDB
+	audioFileDirectory string
 }
 
-func NewTriviaService(triviaDB db.TriviaDB) *TriviaService {
+func NewTriviaService(triviaDB db.TriviaDB, audioFileDirectory string) *TriviaService {
 	return &TriviaService{
-		triviaDB: triviaDB,
+		triviaDB:           triviaDB,
+		audioFileDirectory: audioFileDirectory,
 	}
 }
 
@@ -28,23 +33,28 @@ func (s *TriviaService) GetNewTrivia() (*db.Trivia, error) {
 	}
 
 	if len(audioFileName) > 0 {
-		trivia.AudioBinary, err = getAudioBinary(audioFileName)
+		trivia.AudioBinary, err = s.getAudioBinary(audioFileName)
 	}
 
-	return trivia, err
+	if err != nil {
+		//TODO: log error
+		trivia.AudioBinary = ""
+	}
+
+	return trivia, nil
 }
 
-func (s *TriviaService) AddTrivia(newTrivia *db.Trivia) error {
+func (s *TriviaService) AddTrivia(ctx *context.Context, newTrivia *db.Trivia) error {
 	audioFileName := ""
 	var err error
 	if len(newTrivia.AudioBinary) > 0 {
-		audioFileName, err = writeAudioFile(newTrivia.AudioBinary)
+		audioFileName, err = s.writeAudioFile(newTrivia.AudioBinary)
 		if err != nil {
 			return err
 		}
 	}
 
-	return s.triviaDB.AddTrivia(newTrivia, audioFileName)
+	return s.triviaDB.AddTrivia(ctx, newTrivia, audioFileName)
 }
 
 func (s *TriviaService) MarkTriviaUsed(triviaId int64) error {
@@ -55,15 +65,13 @@ func (s *TriviaService) RoundTypesList() ([]*db.RoundType, error) {
 	return s.triviaDB.RoundTypesList()
 }
 
-func writeAudioFile(audioBinary string) (string, error) {
-	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
-
+func (s *TriviaService) writeAudioFile(audioBinary string) (string, error) {
 	uuidWithHyphen := uuid.New()
 	uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
 
 	fileName := uuid + ".mp3"
 
-	f, err := os.Create(audioFileDirectory + fileName)
+	f, err := os.Create(s.audioFileDirectory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -86,10 +94,12 @@ func writeAudioFile(audioBinary string) (string, error) {
 	return fileName, nil
 }
 
-func getAudioBinary(audioFileName string) (string, error) {
-	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
+func (s *TriviaService) getAudioBinary(audioFileName string) (string, error) {
+	fileName := s.audioFileDirectory + audioFileName
 
-	fileName := audioFileDirectory + audioFileName
+	if _, err := os.Stat(fileName); err != nil {
+		return "", fmt.Errorf("file did not exist.  %s", err.Error())
+	}
 
 	content, err := ioutil.ReadFile(fileName)
 

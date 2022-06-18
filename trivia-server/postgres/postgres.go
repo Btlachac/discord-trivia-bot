@@ -2,7 +2,7 @@ package postgres
 
 import "context"
 
-//go:generate mockgen -source=postgres.go -package=postgres -destination=postgres_mock.go
+//go:generate mockgen -source=postgres.go -package postgres -destination=postgres_mock.go
 
 type TriviaDB interface {
 	GetNewTrivia() (*Trivia, string, error)

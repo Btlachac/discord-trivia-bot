@@ -2,11 +2,12 @@ package server
 
 import (
 	"encoding/json"
-	db "go-trivia-api/model"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+
+	db "github.com/Btlachac/discord-trivia-bot/postgres"
 
 	"github.com/gorilla/mux"
 )
@@ -32,7 +33,8 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 			return
 		}
 
-		err = s.triviaService.AddTrivia(newTrivia)
+		ctx := r.Context()
+		err = s.triviaService.AddTrivia(&ctx, &newTrivia)
 
 		if err != nil {
 			log.Print(err)
