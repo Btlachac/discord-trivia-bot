@@ -34,7 +34,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		err = s.triviaService.AddTrivia(&ctx, &newTrivia)
+		err = s.triviaService.AddTrivia(ctx, &newTrivia)
 
 		if err != nil {
 			s.logger.Error("error occurred while saving trivia ", zap.Error(err))
@@ -51,7 +51,8 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 func (s *Server) handleTriviaGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		trivia, err := s.triviaService.GetNewTrivia()
+		ctx := r.Context()
+		trivia, err := s.triviaService.GetNewTrivia(ctx)
 
 		if err != nil {
 			s.logger.Error("failed to retrieve trivia", zap.Error(err))
@@ -77,7 +78,8 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 			return
 		}
 
-		err = s.triviaService.MarkTriviaUsed(triviaId)
+		ctx := r.Context()
+		err = s.triviaService.MarkTriviaUsed(ctx, triviaId)
 
 		if err != nil {
 			s.logger.Error("failed to mark trivia as used", zap.Error(err))
@@ -92,7 +94,8 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 func (s *Server) handleRoundTypes() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		roundTypes, err := s.triviaService.RoundTypesList()
+		ctx := r.Context()
+		roundTypes, err := s.triviaService.RoundTypesList(ctx)
 
 		if err != nil {
 			s.logger.Error("failed to retrieve round types", zap.Error(err))

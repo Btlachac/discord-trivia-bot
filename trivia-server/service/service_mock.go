@@ -36,7 +36,7 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // AddTrivia mocks base method.
-func (m *MockService) AddTrivia(ctx *context.Context, newTrivia *postgres.Trivia) error {
+func (m *MockService) AddTrivia(ctx context.Context, newTrivia *postgres.Trivia) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddTrivia", ctx, newTrivia)
 	ret0, _ := ret[0].(error)
@@ -50,45 +50,45 @@ func (mr *MockServiceMockRecorder) AddTrivia(ctx, newTrivia interface{}) *gomock
 }
 
 // GetNewTrivia mocks base method.
-func (m *MockService) GetNewTrivia() (*postgres.Trivia, error) {
+func (m *MockService) GetNewTrivia(ctx context.Context) (*postgres.Trivia, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNewTrivia")
+	ret := m.ctrl.Call(m, "GetNewTrivia", ctx)
 	ret0, _ := ret[0].(*postgres.Trivia)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNewTrivia indicates an expected call of GetNewTrivia.
-func (mr *MockServiceMockRecorder) GetNewTrivia() *gomock.Call {
+func (mr *MockServiceMockRecorder) GetNewTrivia(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNewTrivia", reflect.TypeOf((*MockService)(nil).GetNewTrivia))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNewTrivia", reflect.TypeOf((*MockService)(nil).GetNewTrivia), ctx)
 }
 
 // MarkTriviaUsed mocks base method.
-func (m *MockService) MarkTriviaUsed(triviaId int64) error {
+func (m *MockService) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MarkTriviaUsed", triviaId)
+	ret := m.ctrl.Call(m, "MarkTriviaUsed", ctx, triviaId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // MarkTriviaUsed indicates an expected call of MarkTriviaUsed.
-func (mr *MockServiceMockRecorder) MarkTriviaUsed(triviaId interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) MarkTriviaUsed(ctx, triviaId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriviaUsed", reflect.TypeOf((*MockService)(nil).MarkTriviaUsed), triviaId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriviaUsed", reflect.TypeOf((*MockService)(nil).MarkTriviaUsed), ctx, triviaId)
 }
 
 // RoundTypesList mocks base method.
-func (m *MockService) RoundTypesList() ([]*postgres.RoundType, error) {
+func (m *MockService) RoundTypesList(ctx context.Context) ([]*postgres.RoundType, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RoundTypesList")
+	ret := m.ctrl.Call(m, "RoundTypesList", ctx)
 	ret0, _ := ret[0].([]*postgres.RoundType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RoundTypesList indicates an expected call of RoundTypesList.
-func (mr *MockServiceMockRecorder) RoundTypesList() *gomock.Call {
+func (mr *MockServiceMockRecorder) RoundTypesList(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RoundTypesList", reflect.TypeOf((*MockService)(nil).RoundTypesList))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RoundTypesList", reflect.TypeOf((*MockService)(nil).RoundTypesList), ctx)
 }

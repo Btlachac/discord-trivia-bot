@@ -35,7 +35,7 @@ func (m *MockTriviaDB) EXPECT() *MockTriviaDBMockRecorder {
 }
 
 // AddTrivia mocks base method.
-func (m *MockTriviaDB) AddTrivia(ctx *context.Context, newTrivia *Trivia, audioFileName string) error {
+func (m *MockTriviaDB) AddTrivia(ctx context.Context, newTrivia *Trivia, audioFileName string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddTrivia", ctx, newTrivia, audioFileName)
 	ret0, _ := ret[0].(error)
@@ -49,9 +49,9 @@ func (mr *MockTriviaDBMockRecorder) AddTrivia(ctx, newTrivia, audioFileName inte
 }
 
 // GetNewTrivia mocks base method.
-func (m *MockTriviaDB) GetNewTrivia() (*Trivia, string, error) {
+func (m *MockTriviaDB) GetNewTrivia(ctx context.Context) (*Trivia, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNewTrivia")
+	ret := m.ctrl.Call(m, "GetNewTrivia", ctx)
 	ret0, _ := ret[0].(*Trivia)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
@@ -59,36 +59,36 @@ func (m *MockTriviaDB) GetNewTrivia() (*Trivia, string, error) {
 }
 
 // GetNewTrivia indicates an expected call of GetNewTrivia.
-func (mr *MockTriviaDBMockRecorder) GetNewTrivia() *gomock.Call {
+func (mr *MockTriviaDBMockRecorder) GetNewTrivia(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNewTrivia", reflect.TypeOf((*MockTriviaDB)(nil).GetNewTrivia))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNewTrivia", reflect.TypeOf((*MockTriviaDB)(nil).GetNewTrivia), ctx)
 }
 
 // MarkTriviaUsed mocks base method.
-func (m *MockTriviaDB) MarkTriviaUsed(triviaId int64) error {
+func (m *MockTriviaDB) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MarkTriviaUsed", triviaId)
+	ret := m.ctrl.Call(m, "MarkTriviaUsed", ctx, triviaId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // MarkTriviaUsed indicates an expected call of MarkTriviaUsed.
-func (mr *MockTriviaDBMockRecorder) MarkTriviaUsed(triviaId interface{}) *gomock.Call {
+func (mr *MockTriviaDBMockRecorder) MarkTriviaUsed(ctx, triviaId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriviaUsed", reflect.TypeOf((*MockTriviaDB)(nil).MarkTriviaUsed), triviaId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriviaUsed", reflect.TypeOf((*MockTriviaDB)(nil).MarkTriviaUsed), ctx, triviaId)
 }
 
 // RoundTypesList mocks base method.
-func (m *MockTriviaDB) RoundTypesList() ([]*RoundType, error) {
+func (m *MockTriviaDB) RoundTypesList(ctx context.Context) ([]*RoundType, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RoundTypesList")
+	ret := m.ctrl.Call(m, "RoundTypesList", ctx)
 	ret0, _ := ret[0].([]*RoundType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RoundTypesList indicates an expected call of RoundTypesList.
-func (mr *MockTriviaDBMockRecorder) RoundTypesList() *gomock.Call {
+func (mr *MockTriviaDBMockRecorder) RoundTypesList(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RoundTypesList", reflect.TypeOf((*MockTriviaDB)(nil).RoundTypesList))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RoundTypesList", reflect.TypeOf((*MockTriviaDB)(nil).RoundTypesList), ctx)
 }

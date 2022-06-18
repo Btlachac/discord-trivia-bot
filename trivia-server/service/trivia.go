@@ -28,8 +28,8 @@ func NewTriviaService(triviaDB db.TriviaDB, audioFileDirectory string, logger *z
 	}
 }
 
-func (s *TriviaService) GetNewTrivia() (*db.Trivia, error) {
-	trivia, audioFileName, err := s.triviaDB.GetNewTrivia()
+func (s *TriviaService) GetNewTrivia(ctx context.Context) (*db.Trivia, error) {
+	trivia, audioFileName, err := s.triviaDB.GetNewTrivia(ctx)
 
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (s *TriviaService) GetNewTrivia() (*db.Trivia, error) {
 	return trivia, nil
 }
 
-func (s *TriviaService) AddTrivia(ctx *context.Context, newTrivia *db.Trivia) error {
+func (s *TriviaService) AddTrivia(ctx context.Context, newTrivia *db.Trivia) error {
 	audioFileName := ""
 	var err error
 	if len(newTrivia.AudioBinary) > 0 {
@@ -60,12 +60,12 @@ func (s *TriviaService) AddTrivia(ctx *context.Context, newTrivia *db.Trivia) er
 	return s.triviaDB.AddTrivia(ctx, newTrivia, audioFileName)
 }
 
-func (s *TriviaService) MarkTriviaUsed(triviaId int64) error {
-	return s.triviaDB.MarkTriviaUsed(triviaId)
+func (s *TriviaService) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
+	return s.triviaDB.MarkTriviaUsed(ctx, triviaId)
 }
 
-func (s *TriviaService) RoundTypesList() ([]*db.RoundType, error) {
-	return s.triviaDB.RoundTypesList()
+func (s *TriviaService) RoundTypesList(ctx context.Context) ([]*db.RoundType, error) {
+	return s.triviaDB.RoundTypesList(ctx)
 }
 
 func (s *TriviaService) writeAudioFile(audioBinary string) (string, error) {

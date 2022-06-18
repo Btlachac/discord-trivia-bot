@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -27,13 +28,14 @@ func TestGetNewTrivia_DB_Error(t *testing.T) {
 	mockLogger := zap.NewNop()
 
 	mockDB.EXPECT().
-		GetNewTrivia().
+		GetNewTrivia(gomock.Any()).
 		Times(1).
 		Return(nil, "", errors.New("unexpected db error"))
 
 	triviaService := NewTriviaService(mockDB, "", mockLogger)
 
-	_, err := triviaService.GetNewTrivia()
+	ctx := context.Background()
+	_, err := triviaService.GetNewTrivia(ctx)
 
 	if err == nil || err.Error() != "unexpected db error" {
 		t.Errorf("unexpected error: %s", err.Error())
@@ -48,13 +50,14 @@ func TestGetNewTrivia_Error_Bad_Audio_File(t *testing.T) {
 	mockLogger := zap.NewNop()
 
 	mockDB.EXPECT().
-		GetNewTrivia().
+		GetNewTrivia(gomock.Any()).
 		Times(1).
 		Return(&postgres.Trivia{}, "nil", nil)
 
 	triviaService := NewTriviaService(mockDB, "", mockLogger)
 
-	if _, err := triviaService.GetNewTrivia(); err != nil {
+	ctx := context.Background()
+	if _, err := triviaService.GetNewTrivia(ctx); err != nil {
 		t.Errorf("unexpected error: %s", err.Error())
 	}
 }

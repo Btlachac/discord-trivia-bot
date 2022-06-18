@@ -49,7 +49,7 @@ func NewTriviaRepository(db *sql.DB, logger *zap.Logger) *TriviaRepository {
 	}
 }
 
-func (r *TriviaRepository) GetNewTrivia() (*Trivia, string, error) {
+func (r *TriviaRepository) GetNewTrivia(ctx context.Context) (*Trivia, string, error) {
 	var trivia Trivia
 	var audioFileNameHolder sql.NullString
 	audioFileName := ""
@@ -68,8 +68,8 @@ func (r *TriviaRepository) GetNewTrivia() (*Trivia, string, error) {
 	return &trivia, audioFileName, err
 }
 
-func (r *TriviaRepository) AddTrivia(ctx *context.Context, newTrivia *Trivia, audioFileName string) error {
-	tx, err := r.db.BeginTx(*ctx, nil)
+func (r *TriviaRepository) AddTrivia(ctx context.Context, newTrivia *Trivia, audioFileName string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -95,18 +95,31 @@ func (r *TriviaRepository) AddTrivia(ctx *context.Context, newTrivia *Trivia, au
 	return nil
 }
 
-func (r *TriviaRepository) MarkTriviaUsed(triviaId int64) error {
-	_, err := r.db.Exec(MarkTriviaUsedQuery, triviaId)
+func (r *TriviaRepository) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
+
+	defer tx.Rollback()
+
+	_, err = tx.Exec(MarkTriviaUsedQuery, triviaId)
+
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
 	return nil
 
 }
 
-func (r *TriviaRepository) RoundTypesList() ([]*RoundType, error) {
+func (r *TriviaRepository) RoundTypesList(ctx context.Context) ([]*RoundType, error) {
 	var roundTypes []*RoundType
-	rows, err := r.db.Query(RoundTypesListQuery)
+	rows, err := r.db.QueryContext(ctx, RoundTypesListQuery)
 	if err != nil {
 		return roundTypes, err
 	}
@@ -176,7 +189,7 @@ func (r *TriviaRepository) getQuestions(roundId int64) ([]*Question, error) {
 	return questions, nil
 }
 
-func (r *TriviaRepository) addRound(ctx *context.Context, tx *sql.Tx, newRound *Round, triviaId int64) error {
+func (r *TriviaRepository) addRound(ctx context.Context, tx *sql.Tx, newRound *Round, triviaId int64) error {
 	err := tx.QueryRow(addRoundQuery, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription, newRound.RoundType.Id).Scan(&newRound.Id)
 	if err != nil {
 		return err
@@ -191,7 +204,7 @@ func (r *TriviaRepository) addRound(ctx *context.Context, tx *sql.Tx, newRound *
 	return nil
 }
 
-func (r *TriviaRepository) addQuestion(ctx *context.Context, tx *sql.Tx, newQuestion *Question, roundId int64) error {
+func (r *TriviaRepository) addQuestion(ctx context.Context, tx *sql.Tx, newQuestion *Question, roundId int64) error {
 	_, err := tx.Exec(addQuestionQuery, roundId, newQuestion.QuestionNumber, newQuestion.Question)
 	if err != nil {
 		return err
