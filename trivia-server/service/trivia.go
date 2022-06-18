@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	db "github.com/Btlachac/discord-trivia-bot/postgres"
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 )
@@ -16,12 +17,14 @@ import (
 type TriviaService struct {
 	triviaDB           db.TriviaDB
 	audioFileDirectory string
+	logger             *zap.Logger
 }
 
-func NewTriviaService(triviaDB db.TriviaDB, audioFileDirectory string) *TriviaService {
+func NewTriviaService(triviaDB db.TriviaDB, audioFileDirectory string, logger *zap.Logger) *TriviaService {
 	return &TriviaService{
 		triviaDB:           triviaDB,
 		audioFileDirectory: audioFileDirectory,
+		logger:             logger,
 	}
 }
 
@@ -29,7 +32,7 @@ func (s *TriviaService) GetNewTrivia() (*db.Trivia, error) {
 	trivia, audioFileName, err := s.triviaDB.GetNewTrivia()
 
 	if err != nil {
-		return trivia, err
+		return nil, err
 	}
 
 	if len(audioFileName) > 0 {
@@ -37,7 +40,7 @@ func (s *TriviaService) GetNewTrivia() (*db.Trivia, error) {
 	}
 
 	if err != nil {
-		//TODO: log error
+		s.logger.Warn("error occurred retrieving audio file ", zap.String("filename", audioFileName), zap.Error(err))
 		trivia.AudioBinary = ""
 	}
 

@@ -9,6 +9,8 @@ import (
 	"github.com/Btlachac/discord-trivia-bot/postgres"
 	"github.com/Btlachac/discord-trivia-bot/service"
 	"github.com/Btlachac/discord-trivia-bot/worker/server"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/golang-migrate/migrate/v4"
 	pgMigrate "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -22,7 +24,12 @@ func main() {
 	runMigrations(db)
 
 	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
-	ts := createTriviaService(db, audioFileDirectory)
+
+	logger, err := newZapLogger(true)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Failed to create zap logger > %w", err))
+	}
+	ts := createTriviaService(db, audioFileDirectory, logger)
 
 	s := server.NewServer(router, ts)
 
@@ -62,8 +69,43 @@ func runMigrations(db *sql.DB) {
 	}
 }
 
-func createTriviaService(db *sql.DB, audioFileDirectory string) *service.TriviaService {
-	repository := postgres.NewTriviaRepository(db)
-	service := service.NewTriviaService(repository, audioFileDirectory)
+func createTriviaService(db *sql.DB, audioFileDirectory string, logger *zap.Logger) *service.TriviaService {
+	repository := postgres.NewTriviaRepository(db, logger)
+	service := service.NewTriviaService(repository, audioFileDirectory, logger)
 	return service
+}
+
+func newZapLogger(debug bool) (*zap.Logger, error) {
+	zapLoggerConfig := zap.Config{
+		Development: false,
+		Level:       zap.NewAtomicLevelAt(zapcore.InfoLevel),
+		Encoding:    "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "ts",
+			LevelKey:       "severity",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			MessageKey:     "msg",
+			StacktraceKey:  "stacktrace",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalLevelEncoder,
+			EncodeTime:     zapcore.EpochTimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+
+	if debug {
+		zapLoggerConfig.Development = true
+		zapLoggerConfig.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
+	}
+
+	zapLogger, err := zapLoggerConfig.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create zap logger > %w", err)
+	}
+
+	return zapLogger, nil
 }

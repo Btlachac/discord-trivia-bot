@@ -9,6 +9,9 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.9.0 // indirect
 	github.com/rs/cors v1.7.0
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	go.uber.org/zap v1.21.0
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
 )

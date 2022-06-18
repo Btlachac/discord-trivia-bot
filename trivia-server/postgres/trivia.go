@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+
+	"go.uber.org/zap"
 )
 
 type Question struct {
@@ -36,12 +38,14 @@ type RoundType struct {
 }
 
 type TriviaRepository struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *zap.Logger
 }
 
-func NewTriviaRepository(db *sql.DB) *TriviaRepository {
+func NewTriviaRepository(db *sql.DB, logger *zap.Logger) *TriviaRepository {
 	return &TriviaRepository{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
@@ -52,7 +56,6 @@ func (r *TriviaRepository) GetNewTrivia() (*Trivia, string, error) {
 
 	err := r.db.QueryRow(GetNewTriviaQuery).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileNameHolder)
 	if err != nil {
-		//TODO: log error
 		return &trivia, audioFileName, err
 	}
 

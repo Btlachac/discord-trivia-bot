@@ -6,6 +6,7 @@ import (
 
 	"github.com/Btlachac/discord-trivia-bot/service"
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 
 	"github.com/rs/cors"
 )
@@ -13,6 +14,7 @@ import (
 type Server struct {
 	triviaService service.Service
 	router        *mux.Router
+	logger        *zap.Logger
 }
 
 func (s *Server) Run() {

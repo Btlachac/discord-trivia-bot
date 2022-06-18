@@ -3,11 +3,11 @@ package server
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 
 	db "github.com/Btlachac/discord-trivia-bot/postgres"
+	"go.uber.org/zap"
 
 	"github.com/gorilla/mux"
 )
@@ -18,7 +18,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		reqBody, err := ioutil.ReadAll(r.Body)
 
 		if err != nil {
-			log.Print(err)
+			s.logger.Error("error occurred reading request body ", zap.Error(err))
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 			return
 		}
@@ -28,7 +28,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		err = json.Unmarshal([]byte(reqBody), &newTrivia)
 
 		if err != nil {
-			log.Print(err)
+			s.logger.Error("error occurred parsing JSON ", zap.Error(err))
 			http.Error(w, "Failed to parse JSON body", http.StatusInternalServerError)
 			return
 		}
@@ -37,7 +37,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		err = s.triviaService.AddTrivia(&ctx, &newTrivia)
 
 		if err != nil {
-			log.Print(err)
+			s.logger.Error("error occurred while saving trivia ", zap.Error(err))
 			http.Error(w, "Failed trying to save new trivia", http.StatusInternalServerError)
 			return
 		}
@@ -54,7 +54,7 @@ func (s *Server) handleTriviaGet() http.HandlerFunc {
 		trivia, err := s.triviaService.GetNewTrivia()
 
 		if err != nil {
-			log.Print(err)
+			s.logger.Error("failed to retrieve trivia", zap.Error(err))
 			http.Error(w, "Failed to retrive new trivia", http.StatusInternalServerError)
 			return
 		}
@@ -72,7 +72,7 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 		triviaId, err := strconv.ParseInt(params["id"], 10, 64)
 
 		if err != nil {
-			log.Print(err)
+			s.logger.Error("failed to parse ID", zap.Error(err))
 			http.Error(w, "Failed to parse id parameter", http.StatusInternalServerError)
 			return
 		}
@@ -80,7 +80,7 @@ func (s *Server) handleTriviaMarkUsed() http.HandlerFunc {
 		err = s.triviaService.MarkTriviaUsed(triviaId)
 
 		if err != nil {
-			log.Print(err)
+			s.logger.Error("failed to mark trivia as used", zap.Error(err))
 			http.Error(w, "Failed to mark trivia as used", http.StatusInternalServerError)
 			return
 		}
@@ -95,7 +95,7 @@ func (s *Server) handleRoundTypes() http.HandlerFunc {
 		roundTypes, err := s.triviaService.RoundTypesList()
 
 		if err != nil {
-			log.Print(err)
+			s.logger.Error("failed to retrieve round types", zap.Error(err))
 			http.Error(w, "Failed to retrieve round types", http.StatusInternalServerError)
 			return
 		}
