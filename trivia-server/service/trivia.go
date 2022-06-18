@@ -49,11 +49,19 @@ func (s *TriviaService) GetNewTrivia(ctx context.Context) (*db.Trivia, error) {
 
 func (s *TriviaService) AddTrivia(ctx context.Context, newTrivia *db.Trivia) error {
 	audioFileName := ""
+
+	if index := strings.Index(newTrivia.ImageRoundURL, "/present"); index != -1 {
+		newTrivia.ImageRoundURL = newTrivia.ImageRoundURL[0:index]
+	}
+
 	var err error
 	if len(newTrivia.AudioBinary) > 0 {
 		audioFileName, err = s.writeAudioFile(newTrivia.AudioBinary)
 		if err != nil {
-			return err
+			s.logger.Error("Error writing audio file ",
+				zap.String("audio_file_name", audioFileName),
+				zap.Error(err))
+			audioFileName = ""
 		}
 	}
 
@@ -91,7 +99,7 @@ func (s *TriviaService) writeAudioFile(audioBinary string) (string, error) {
 	_, err = f.Write(data)
 
 	if err != nil {
-		return fileName, err
+		return "", err
 	}
 
 	return fileName, nil
