@@ -1,6 +1,21 @@
 
 version: '3'
 services:
+  db:
+    image: postgres:latest
+    container_name: db_postgres
+    environment:
+      - POSTGRES_USER=${DB_USER}  
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_SERVER} 
+    ports:
+      - 54321:5432
+    volumes:
+      - database_postgres:/var/lib/postgresql/data
+    networks:
+      - fullstack
+      
   server:
     container_name: trivia-server
     environment:
@@ -17,21 +32,6 @@ services:
       - api:${AUDIO_FILE_DIRECTORY}
     depends_on:
       - db
-    networks:
-      - fullstack
-      
-  db:
-    image: postgres:latest
-    container_name: db_postgres
-    environment:
-      - POSTGRES_USER=${DB_USER}  
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_SERVER} 
-    ports:
-      - 54321:5432
-    volumes:
-      - database_postgres:/var/lib/postgresql/data
     networks:
       - fullstack
       

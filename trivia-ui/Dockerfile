@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:16
 
 # create destination directory
 RUN mkdir -p /trivia-ui
