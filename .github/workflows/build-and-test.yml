@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run Unit Tests
-        run: go test ./trivia-server/...
+        run: cd ./trivia-server && go test ./...
 
   # deploy:
   #   runs-on: ubuntu-latest
