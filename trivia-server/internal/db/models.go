@@ -1,4 +1,4 @@
-package model
+package db
 
 type Question struct {
 	Question       string `json:"question"`

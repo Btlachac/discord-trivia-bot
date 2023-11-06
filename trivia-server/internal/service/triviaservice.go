@@ -2,19 +2,21 @@ package service
 
 import (
 	b64 "encoding/base64"
-	"go-trivia-api/model"
 	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/google/uuid"
+
+	"go-trivia-api/internal/db"
 )
 
+//TODO: think about imports here
 type triviaRepository interface {
-	GetNewTrivia() (model.Trivia, string, error)
-	AddTrivia(newTrivia model.Trivia, audioFileName string) error
+	GetNewTrivia() (db.Trivia, string, error)
+	AddTrivia(newTrivia db.Trivia, audioFileName string) error
 	MarkTriviaUsed(triviaId int64) error
-	RoundTypesList() ([]model.RoundType, error)
+	RoundTypesList() ([]db.RoundType, error)
 }
 
 type TriviaService struct {
@@ -27,7 +29,7 @@ func NewTriviaService(triviaRepository triviaRepository) *TriviaService {
 	}
 }
 
-func (service *TriviaService) GetNewTrivia() (model.Trivia, error) {
+func (service *TriviaService) GetNewTrivia() (db.Trivia, error) {
 	trivia, audioFileName, err := service.triviaRepository.GetNewTrivia()
 
 	if err != nil {
@@ -41,7 +43,7 @@ func (service *TriviaService) GetNewTrivia() (model.Trivia, error) {
 	return trivia, err
 }
 
-func (service *TriviaService) AddTrivia(newTrivia model.Trivia) error {
+func (service *TriviaService) AddTrivia(newTrivia db.Trivia) error {
 	audioFileName := ""
 	var err error
 	if len(newTrivia.AudioBinary) > 0 {
@@ -58,7 +60,7 @@ func (service *TriviaService) MarkTriviaUsed(triviaId int64) error {
 	return service.triviaRepository.MarkTriviaUsed(triviaId)
 }
 
-func (service *TriviaService) RoundTypesList() ([]model.RoundType, error) {
+func (service *TriviaService) RoundTypesList() ([]db.RoundType, error) {
 	return service.triviaRepository.RoundTypesList()
 }
 

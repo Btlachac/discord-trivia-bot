@@ -2,13 +2,10 @@ package server
 
 import (
 	"encoding/json"
-	"go-trivia-api/model"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
-
-	"github.com/gorilla/mux"
+	"go-trivia-api/internal/db"
 )
 
 func (s *Server) handleTriviaCreate() http.HandlerFunc {
@@ -22,7 +19,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 			return
 		}
 
-		var newTrivia model.Trivia
+		var newTrivia db.Trivia
 
 		err = json.Unmarshal([]byte(reqBody), &newTrivia)
 

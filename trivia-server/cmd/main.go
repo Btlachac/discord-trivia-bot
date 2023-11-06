@@ -3,9 +3,9 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"go-trivia-api/postgres"
-	"go-trivia-api/server"
-	"go-trivia-api/service"
+	"go-trivia-api/internal/db"
+	"go-trivia-api/internal/server"
+	"go-trivia-api/internal/service"
 	"log"
 	"os"
 
@@ -60,8 +60,8 @@ func runMigrations(db *sql.DB) {
 	}
 }
 
-func createTriviaService(db *sql.DB) *service.TriviaService {
-	repository := postgres.NewTriviaRepository(db)
+func createTriviaService(sqlDB *sql.DB) *service.TriviaService {
+	repository := db.NewTriviaRepository(sqlDB)
 	service := service.NewTriviaService(repository)
 	return service
 }
