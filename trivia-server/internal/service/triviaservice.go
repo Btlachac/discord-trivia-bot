@@ -2,7 +2,6 @@ package service
 
 import (
 	b64 "encoding/base64"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -11,7 +10,7 @@ import (
 	"go-trivia-api/internal/db"
 )
 
-//TODO: think about imports here
+// TODO: think about imports here
 type triviaRepository interface {
 	GetNewTrivia() (db.Trivia, string, error)
 	AddTrivia(newTrivia db.Trivia, audioFileName string) error
@@ -100,7 +99,7 @@ func getAudioBinary(audioFileName string) (string, error) {
 
 	fileName := audioFileDirectory + audioFileName
 
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 
 	if err != nil {
 		return "", err

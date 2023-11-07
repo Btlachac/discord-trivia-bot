@@ -46,6 +46,9 @@ func getDBConnection() *sql.DB {
 
 func runMigrations(db *sql.DB) {
 	driver, err := pgMigrate.WithInstance(db, &pgMigrate.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://migrations",

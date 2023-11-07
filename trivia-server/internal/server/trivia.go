@@ -2,16 +2,16 @@ package server
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"go-trivia-api/internal/db"
+	"io"
 	"log"
 	"net/http"
-	"go-trivia-api/internal/db"
 )
 
 func (s *Server) handleTriviaCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		reqBody, err := ioutil.ReadAll(r.Body)
+		reqBody, err := io.ReadAll(r.Body)
 
 		if err != nil {
 			log.Print(err)
@@ -39,7 +39,9 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 
 		w.WriteHeader(http.StatusCreated)
 
-		json.NewEncoder(w).Encode(newTrivia)
+		if err = json.NewEncoder(w).Encode(newTrivia); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -97,6 +99,8 @@ func (s *Server) handleRoundTypes() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(roundTypes)
+		if err = json.NewEncoder(w).Encode(roundTypes); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
 	}
 }
