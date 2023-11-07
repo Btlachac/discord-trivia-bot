@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	b64 "encoding/base64"
 	"os"
 	"strings"
@@ -12,10 +13,10 @@ import (
 
 // TODO: think about imports here
 type triviaRepository interface {
-	GetNewTrivia() (db.Trivia, string, error)
-	AddTrivia(newTrivia db.Trivia, audioFileName string) error
-	MarkTriviaUsed(triviaId int64) error
-	RoundTypesList() ([]db.RoundType, error)
+	GetNewTrivia(ctx context.Context) (db.Trivia, string, error)
+	AddTrivia(ctx context.Context, newTrivia db.Trivia, audioFileName string) error
+	MarkTriviaUsed(ctx context.Context, triviaId int64) error
+	RoundTypesList(ctx context.Context) ([]db.RoundType, error)
 }
 
 type TriviaService struct {
@@ -28,8 +29,8 @@ func NewTriviaService(triviaRepository triviaRepository) *TriviaService {
 	}
 }
 
-func (service *TriviaService) GetNewTrivia() (db.Trivia, error) {
-	trivia, audioFileName, err := service.triviaRepository.GetNewTrivia()
+func (service *TriviaService) GetNewTrivia(ctx context.Context) (db.Trivia, error) {
+	trivia, audioFileName, err := service.triviaRepository.GetNewTrivia(ctx)
 
 	if err != nil {
 		return trivia, err
@@ -42,7 +43,7 @@ func (service *TriviaService) GetNewTrivia() (db.Trivia, error) {
 	return trivia, err
 }
 
-func (service *TriviaService) AddTrivia(newTrivia db.Trivia) error {
+func (service *TriviaService) AddTrivia(ctx context.Context, newTrivia db.Trivia) error {
 	audioFileName := ""
 	var err error
 	if len(newTrivia.AudioBinary) > 0 {
@@ -52,18 +53,19 @@ func (service *TriviaService) AddTrivia(newTrivia db.Trivia) error {
 		}
 	}
 
-	return service.triviaRepository.AddTrivia(newTrivia, audioFileName)
+	return service.triviaRepository.AddTrivia(ctx, newTrivia, audioFileName)
 }
 
-func (service *TriviaService) MarkTriviaUsed(triviaId int64) error {
-	return service.triviaRepository.MarkTriviaUsed(triviaId)
+func (service *TriviaService) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
+	return service.triviaRepository.MarkTriviaUsed(ctx, triviaId)
 }
 
-func (service *TriviaService) RoundTypesList() ([]db.RoundType, error) {
-	return service.triviaRepository.RoundTypesList()
+func (service *TriviaService) RoundTypesList(ctx context.Context) ([]db.RoundType, error) {
+	return service.triviaRepository.RoundTypesList(ctx)
 }
 
 func writeAudioFile(audioBinary string) (string, error) {
+	//TODO: move to field on struct
 	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
 
 	uuidWithHyphen := uuid.New()

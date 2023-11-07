@@ -47,7 +47,7 @@ jobs:
           context: ./trivia-server
           file: ./trivia-server/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/trivia-server:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/discord-trivia-bot-server:latest
 
   docker-trivia-ui:
     runs-on: ubuntu-latest
@@ -71,4 +71,4 @@ jobs:
           context: ./trivia-ui
           file: ./trivia-ui/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/trivia-ui:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/discord-trivia-bot-ui:latest

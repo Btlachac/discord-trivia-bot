@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 )
 
@@ -14,7 +15,7 @@ func NewTriviaRepository(db *sql.DB) *TriviaRepository {
 	}
 }
 
-func (repository *TriviaRepository) GetNewTrivia() (Trivia, string, error) {
+func (repository *TriviaRepository) GetNewTrivia(ctx context.Context) (Trivia, string, error) {
 	selectTriviaStatement := `
   SELECT id, image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name
   FROM dt.trivia
@@ -26,7 +27,7 @@ func (repository *TriviaRepository) GetNewTrivia() (Trivia, string, error) {
 	var audioFileNameHolder sql.NullString
 	audioFileName := ""
 
-	err := repository.db.QueryRow(selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileNameHolder)
+	err := repository.db.QueryRowContext(ctx, selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileNameHolder)
 	if err != nil {
 		return trivia, audioFileName, err
 	}
@@ -35,25 +36,25 @@ func (repository *TriviaRepository) GetNewTrivia() (Trivia, string, error) {
 		audioFileName = audioFileNameHolder.String
 	}
 
-	trivia.Rounds, err = repository.getRounds(trivia.Id)
+	trivia.Rounds, err = repository.getRounds(ctx, trivia.Id)
 
 	return trivia, audioFileName, err
 }
 
-func (repository *TriviaRepository) AddTrivia(newTrivia Trivia, audioFileName string) error {
+func (repository *TriviaRepository) AddTrivia(ctx context.Context, newTrivia Trivia, audioFileName string) error {
 
 	insertTriviaStatement := `
   INSERT INTO dt.trivia(image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name)
   VALUES($1, $2, $3, $4, $5, $6)
   RETURNING id`
 
-	err := repository.db.QueryRow(insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
+	err := repository.db.QueryRowContext(ctx, insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName).Scan(&newTrivia.Id)
 	if err != nil {
 		return err
 	}
 
 	for _, round := range newTrivia.Rounds {
-		err = repository.addRound(round, newTrivia.Id)
+		err = repository.addRound(ctx, round, newTrivia.Id)
 		if err != nil {
 			return err
 		}
@@ -61,14 +62,14 @@ func (repository *TriviaRepository) AddTrivia(newTrivia Trivia, audioFileName st
 	return nil
 }
 
-func (repository *TriviaRepository) MarkTriviaUsed(triviaId int64) error {
+func (repository *TriviaRepository) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
 	updateTriviaStatement := `
 	UPDATE dt.trivia
 	SET used = true,
 		date_used = CURRENT_DATE
 	WHERE id = $1`
 
-	_, err := repository.db.Exec(updateTriviaStatement, triviaId)
+	_, err := repository.db.ExecContext(ctx, updateTriviaStatement, triviaId)
 	if err != nil {
 		return err
 	}
@@ -76,14 +77,14 @@ func (repository *TriviaRepository) MarkTriviaUsed(triviaId int64) error {
 
 }
 
-func (repository *TriviaRepository) RoundTypesList() ([]RoundType, error) {
+func (repository *TriviaRepository) RoundTypesList(ctx context.Context) ([]RoundType, error) {
 	selectStatement := `
 	SELECT id, name
 	FROM dt.round_type
 	`
 
 	var roundTypes []RoundType
-	rows, err := repository.db.Query(selectStatement)
+	rows, err := repository.db.QueryContext(ctx, selectStatement)
 	if err != nil {
 		return nil, err
 	}
@@ -103,14 +104,14 @@ func (repository *TriviaRepository) RoundTypesList() ([]RoundType, error) {
 	return roundTypes, nil
 }
 
-func (repository *TriviaRepository) getRounds(triviaId int64) ([]Round, error) {
+func (repository *TriviaRepository) getRounds(ctx context.Context, triviaId int64) ([]Round, error) {
 	selectRoundsStatement := `
 	SELECT r.id, r.round_number, r.theme, r.theme_description, rt.name
 	FROM dt.round r JOIN dt.round_type rt ON r.round_type_id = rt.id
 	WHERE trivia_id = $1
 	`
 	var rounds []Round
-	rows, err := repository.db.Query(selectRoundsStatement, triviaId)
+	rows, err := repository.db.QueryContext(ctx, selectRoundsStatement, triviaId)
 	if err != nil {
 		return rounds, err
 	}
@@ -124,7 +125,7 @@ func (repository *TriviaRepository) getRounds(triviaId int64) ([]Round, error) {
 			return rounds, err
 		}
 
-		round.Questions, err = repository.getQuestions(round.Id)
+		round.Questions, err = repository.getQuestions(ctx, round.Id)
 		if err != nil {
 			return rounds, err
 		}
@@ -135,7 +136,7 @@ func (repository *TriviaRepository) getRounds(triviaId int64) ([]Round, error) {
 	return rounds, nil
 }
 
-func (repository *TriviaRepository) getQuestions(roundId int64) ([]Question, error) {
+func (repository *TriviaRepository) getQuestions(ctx context.Context, roundId int64) ([]Question, error) {
 	selectQuestionsStatement := `
   SELECT question_number, question
   FROM dt.question
@@ -144,7 +145,7 @@ func (repository *TriviaRepository) getQuestions(roundId int64) ([]Question, err
   `
 	var questions []Question
 
-	rows, err := repository.db.Query(selectQuestionsStatement, roundId)
+	rows, err := repository.db.QueryContext(ctx, selectQuestionsStatement, roundId)
 	if err != nil {
 		return questions, err
 	}
@@ -164,19 +165,19 @@ func (repository *TriviaRepository) getQuestions(roundId int64) ([]Question, err
 	return questions, nil
 }
 
-func (repository *TriviaRepository) addRound(newRound Round, triviaId int64) error {
+func (repository *TriviaRepository) addRound(ctx context.Context, newRound Round, triviaId int64) error {
 	insertRoundStatement := `
   INSERT INTO dt.round(trivia_id, round_number, theme, theme_description, round_type_id)
   VALUES($1, $2, $3, $4, $5)
   RETURNING id`
 
-	err := repository.db.QueryRow(insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription, newRound.RoundType.Id).Scan(&newRound.Id)
+	err := repository.db.QueryRowContext(ctx, insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription, newRound.RoundType.Id).Scan(&newRound.Id)
 	if err != nil {
 		return err
 	}
 
 	for _, question := range newRound.Questions {
-		err = repository.addQuestion(question, newRound.Id)
+		err = repository.addQuestion(ctx, question, newRound.Id)
 		if err != nil {
 			return err
 		}
@@ -184,12 +185,12 @@ func (repository *TriviaRepository) addRound(newRound Round, triviaId int64) err
 	return nil
 }
 
-func (repository *TriviaRepository) addQuestion(newQuestion Question, roundId int64) error {
+func (repository *TriviaRepository) addQuestion(ctx context.Context, newQuestion Question, roundId int64) error {
 	insertQuestionStatement := `
   INSERT INTO dt.question(round_id, question_number, question)
   VALUES($1, $2, $3)`
 
-	_, err := repository.db.Exec(insertQuestionStatement, roundId, newQuestion.QuestionNumber, newQuestion.Question)
+	_, err := repository.db.ExecContext(ctx, insertQuestionStatement, roundId, newQuestion.QuestionNumber, newQuestion.Question)
 	if err != nil {
 		return err
 	}

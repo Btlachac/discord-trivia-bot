@@ -10,7 +10,6 @@ import (
 
 func (s *Server) handleTriviaCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		reqBody, err := io.ReadAll(r.Body)
 
 		if err != nil {
@@ -29,7 +28,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 			return
 		}
 
-		err = s.triviaService.AddTrivia(newTrivia)
+		err = s.triviaService.AddTrivia(r.Context(), newTrivia)
 
 		if err != nil {
 			log.Print(err)
@@ -90,7 +89,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 func (s *Server) handleRoundTypes() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		roundTypes, err := s.triviaService.RoundTypesList()
+		roundTypes, err := s.triviaService.RoundTypesList(r.Context())
 
 		if err != nil {
 			log.Print(err)

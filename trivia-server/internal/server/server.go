@@ -1,14 +1,15 @@
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
-	"github.com/rs/cors"
 	"go-trivia-api/internal/db"
 
+	"github.com/rs/cors"
 )
 
 type Server struct {
@@ -19,9 +20,9 @@ type Server struct {
 type triviaService interface {
 	//TODO
 	// GetNewTrivia() (model.Trivia, error)
-	AddTrivia(newTrivia db.Trivia) error
+	AddTrivia(ctx context.Context, newTrivia db.Trivia) error
 	// MarkTriviaUsed(triviaId int64) error
-	RoundTypesList() ([]db.RoundType, error)
+	RoundTypesList(ctx context.Context) ([]db.RoundType, error)
 }
 
 func (s *Server) Run() {
