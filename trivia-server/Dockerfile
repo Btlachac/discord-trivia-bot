@@ -1,25 +1,11 @@
-FROM golang:alpine as builder
+FROM golang:1.21 as builder
 
-RUN apk update && apk add --no-cache git
+WORKDIR /src
 
-WORKDIR /app
+ADD . /src
 
-COPY go.mod go.sum ./
+RUN go build -o /app ./cmd
 
-RUN go mod download 
-
-COPY . .
-
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-
-WORKDIR /root/
-
-COPY --from=builder /app/cmd/main .
-COPY --from=builder /app/migrations ./migrations
-     
-EXPOSE 8080
-
-CMD ["./main"]
+FROM scratch
+COPY --from=builder /app /app
+CMD ["/app"]
