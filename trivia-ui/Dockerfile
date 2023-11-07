@@ -1,5 +1,7 @@
 FROM node:latest
 
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
 # create destination directory
 RUN mkdir -p /trivia-ui
 WORKDIR /trivia-ui
