@@ -44,7 +44,7 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./trivia-server
           file: ./trivia-server/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/clockbox:latest
