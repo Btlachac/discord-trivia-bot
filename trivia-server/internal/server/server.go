@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"log"
-	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,7 +15,6 @@ import (
 type Server struct {
 	triviaService triviaService
 	router        *mux.Router
-	logger        *slog.Logger
 }
 
 type triviaService interface {
