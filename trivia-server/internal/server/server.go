@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,6 +16,7 @@ import (
 type Server struct {
 	triviaService triviaService
 	router        *mux.Router
+	logger        *slog.Logger
 }
 
 type triviaService interface {
@@ -33,8 +35,8 @@ func (s *Server) Run() {
 
 	handler := c.Handler(s.router)
 
+	//TODO
 	log.Fatal(http.ListenAndServe(":8080", handler))
-
 }
 
 func NewServer(router *mux.Router, triviaService triviaService) *Server {

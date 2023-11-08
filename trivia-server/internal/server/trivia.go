@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"go-trivia-api/internal/db"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -13,8 +13,8 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		reqBody, err := io.ReadAll(r.Body)
 
 		if err != nil {
-			log.Print(err)
-			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+			slog.Error("error reading request body", err)
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
 
@@ -23,15 +23,15 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		err = json.Unmarshal([]byte(reqBody), &newTrivia)
 
 		if err != nil {
-			log.Print(err)
-			http.Error(w, "Failed to parse JSON body", http.StatusInternalServerError)
+			slog.Error("failed to unmarshal request", err)
+			http.Error(w, "Failed to parse JSON body", http.StatusBadRequest)
 			return
 		}
 
 		err = s.triviaService.AddTrivia(r.Context(), newTrivia)
 
 		if err != nil {
-			log.Print(err)
+			slog.Error("failed saving new trivia", err)
 			http.Error(w, "Failed trying to save new trivia", http.StatusInternalServerError)
 			return
 		}
@@ -39,6 +39,7 @@ func (s *Server) handleTriviaCreate() http.HandlerFunc {
 		w.WriteHeader(http.StatusCreated)
 
 		if err = json.NewEncoder(w).Encode(newTrivia); err != nil {
+			slog.Error("failed encoding response", err)
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}
@@ -92,13 +93,14 @@ func (s *Server) handleRoundTypes() http.HandlerFunc {
 		roundTypes, err := s.triviaService.RoundTypesList(r.Context())
 
 		if err != nil {
-			log.Print(err)
+			slog.Error("error retrieving round types", err)
 			http.Error(w, "Failed to retrieve round types", http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		if err = json.NewEncoder(w).Encode(roundTypes); err != nil {
+			slog.Error("failed to encode response", err)
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		}
 	}

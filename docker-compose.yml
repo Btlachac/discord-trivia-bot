@@ -2,6 +2,7 @@
 version: '3'
 services:
   server:
+    image: btlachac95/discord-trivia-bot-server
     container_name: trivia-server
     environment:
       - DB_USER=${DB_USER}  
@@ -9,7 +10,6 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_SERVER=${DB_SERVER} 
       - AUDIO_FILE_DIRECTORY=${AUDIO_FILE_DIRECTORY}
-    build: ./trivia-server
     ports: 
       - 8080:8080 
     restart: on-failure
@@ -36,25 +36,24 @@ services:
       - fullstack
       
   ui:
+    image: btlachac95/discord-trivia-bot-ui
     container_name: trivia-ui
-    build: 
-      context: ./trivia-ui
-      args:
-        - API_URL=${API_URL}
+    environment:
+      - API_URL=${API_URL}
     ports: 
       - 5000:5000 
     restart: on-failure
     networks:
       - fullstack
 
-  bots:
-    container_name: trivia-bots
-    environment:
-      - API_URL=${API_URL}
-    build: ./trivia-bots
-    restart: on-failure
-    networks:
-      - fullstack
+  # bots:
+  #   container_name: trivia-bots
+  #   environment:
+  #     - API_URL=${API_URL}
+  #   build: ./trivia-bots
+  #   restart: on-failure
+  #   networks:
+  #     - fullstack
 
 volumes:
   api:

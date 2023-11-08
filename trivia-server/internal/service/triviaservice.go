@@ -20,60 +20,59 @@ type triviaRepository interface {
 }
 
 type TriviaService struct {
-	triviaRepository triviaRepository
+	triviaRepository   triviaRepository
+	audioFileDirectory string
 }
 
-func NewTriviaService(triviaRepository triviaRepository) *TriviaService {
+func NewTriviaService(triviaRepository triviaRepository, audioFileDirectory string) *TriviaService {
 	return &TriviaService{
-		triviaRepository: triviaRepository,
+		triviaRepository:   triviaRepository,
+		audioFileDirectory: audioFileDirectory,
 	}
 }
 
-func (service *TriviaService) GetNewTrivia(ctx context.Context) (db.Trivia, error) {
-	trivia, audioFileName, err := service.triviaRepository.GetNewTrivia(ctx)
+func (s *TriviaService) GetNewTrivia(ctx context.Context) (db.Trivia, error) {
+	trivia, audioFileName, err := s.triviaRepository.GetNewTrivia(ctx)
 
 	if err != nil {
 		return trivia, err
 	}
 
 	if len(audioFileName) > 0 {
-		trivia.AudioBinary, err = getAudioBinary(audioFileName)
+		trivia.AudioBinary, err = s.getAudioBinary(audioFileName)
 	}
 
 	return trivia, err
 }
 
-func (service *TriviaService) AddTrivia(ctx context.Context, newTrivia db.Trivia) error {
+func (s *TriviaService) AddTrivia(ctx context.Context, newTrivia db.Trivia) error {
 	audioFileName := ""
 	var err error
 	if len(newTrivia.AudioBinary) > 0 {
-		audioFileName, err = writeAudioFile(newTrivia.AudioBinary)
+		audioFileName, err = s.writeAudioFile(newTrivia.AudioBinary)
 		if err != nil {
 			return err
 		}
 	}
 
-	return service.triviaRepository.AddTrivia(ctx, newTrivia, audioFileName)
+	return s.triviaRepository.AddTrivia(ctx, newTrivia, audioFileName)
 }
 
-func (service *TriviaService) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
-	return service.triviaRepository.MarkTriviaUsed(ctx, triviaId)
+func (s *TriviaService) MarkTriviaUsed(ctx context.Context, triviaId int64) error {
+	return s.triviaRepository.MarkTriviaUsed(ctx, triviaId)
 }
 
-func (service *TriviaService) RoundTypesList(ctx context.Context) ([]db.RoundType, error) {
-	return service.triviaRepository.RoundTypesList(ctx)
+func (s *TriviaService) RoundTypesList(ctx context.Context) ([]db.RoundType, error) {
+	return s.triviaRepository.RoundTypesList(ctx)
 }
 
-func writeAudioFile(audioBinary string) (string, error) {
-	//TODO: move to field on struct
-	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
-
+func (s *TriviaService) writeAudioFile(audioBinary string) (string, error) {
 	uuidWithHyphen := uuid.New()
 	uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
 
 	fileName := uuid + ".mp3"
 
-	f, err := os.Create(audioFileDirectory + fileName)
+	f, err := os.Create(s.audioFileDirectory + fileName)
 	if err != nil {
 		return "", err
 	}
@@ -96,10 +95,8 @@ func writeAudioFile(audioBinary string) (string, error) {
 	return fileName, nil
 }
 
-func getAudioBinary(audioFileName string) (string, error) {
-	audioFileDirectory := os.Getenv("AUDIO_FILE_DIRECTORY")
-
-	fileName := audioFileDirectory + audioFileName
+func (s *TriviaService) getAudioBinary(audioFileName string) (string, error) {
+	fileName := s.audioFileDirectory + audioFileName
 
 	content, err := os.ReadFile(fileName)
 
