@@ -20,6 +20,8 @@ func (r *TriviaRepository) AddTrivia(ctx context.Context, newTrivia Trivia, audi
 	if err != nil {
 		return err
 	}
+
+	//nolint
 	defer tx.Rollback()
 
 	insertTriviaStatement := `
@@ -140,6 +142,9 @@ func (r *TriviaRepository) GetNewTrivia(ctx context.Context) (Trivia, string, er
 	if err != nil {
 		return Trivia{}, "", err
 	}
+
+	//nolint
+	defer tx.Rollback()
 
 	err = tx.QueryRowContext(ctx, selectTriviaStatement).Scan(&trivia.Id, &trivia.ImageRoundTheme, &trivia.ImageRoundDetail, &trivia.ImageRoundURL, &trivia.AudioRoundTheme, &trivia.AnswersURL, &audioFileNameHolder)
 	if err != nil {
