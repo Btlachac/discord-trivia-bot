@@ -16,7 +16,6 @@ import (
 	"github.com/sethvargo/go-envconfig"
 )
 
-// TODO: parse all env vars in main
 type config struct {
 	AudioFileDirectory string `env:"AUDIO_FILE_DIRECTORY,required"`
 
