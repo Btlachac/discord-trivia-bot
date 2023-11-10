@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -25,7 +24,7 @@ type triviaService interface {
 	RoundTypesList(ctx context.Context) ([]db.RoundType, error)
 }
 
-func (s *Server) Run() {
+func (s *Server) Run() error {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
@@ -33,8 +32,7 @@ func (s *Server) Run() {
 
 	handler := c.Handler(s.router)
 
-	//TODO
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	return http.ListenAndServe(":8080", handler)
 }
 
 func NewServer(router *mux.Router, triviaService triviaService) *Server {

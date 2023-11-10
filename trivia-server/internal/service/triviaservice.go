@@ -39,7 +39,7 @@ func (s *TriviaService) GetNewTrivia(ctx context.Context) (db.Trivia, error) {
 	}
 
 	if len(audioFileName) > 0 {
-		trivia.AudioBinary, err = s.getAudioBinary(audioFileName)
+		trivia.AudioFileName = s.audioFileDirectory + audioFileName
 	}
 
 	return trivia, err
@@ -93,18 +93,4 @@ func (s *TriviaService) writeAudioFile(audioBinary string) (string, error) {
 	}
 
 	return fileName, nil
-}
-
-func (s *TriviaService) getAudioBinary(audioFileName string) (string, error) {
-	fileName := s.audioFileDirectory + audioFileName
-
-	content, err := os.ReadFile(fileName)
-
-	if err != nil {
-		return "", err
-	}
-
-	encodedFile := b64.StdEncoding.EncodeToString(content)
-
-	return encodedFile, nil
 }

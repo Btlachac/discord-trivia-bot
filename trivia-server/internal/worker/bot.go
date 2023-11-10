@@ -1,12 +1,19 @@
 package worker
 
 import (
+	"context"
+	"encoding/binary"
 	"fmt"
 	"go-trivia-api/internal/db"
+	"io"
 	"log/slog"
+	"os"
+	"os/exec"
+	"os/signal"
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -22,37 +29,75 @@ const (
 	 To do so you number your answers from 5-1 and you will get that many points if that answer is correct.`
 )
 
-// https://github.com/bwmarrin/discordgo/blob/master/examples/airhorn/main.go seems useful
-
 type triviaService interface {
-	GetNewTrivia() (db.Trivia, error)
-	MarkTriviaUsed(triviaId int64) error
+	GetNewTrivia(ctx context.Context) (db.Trivia, error)
+	MarkTriviaUsed(ctx context.Context, triviaId int64) error
 }
 
 // TODO: add mutex lock around trivia in progress
 // TODO: do validation on channel IDs in main
-type bot struct {
+type Bot struct {
 	triviaHost    *discordgo.Session
 	triviaService triviaService
 
 	triviaChannelID  string
 	commandChannelID string
 
-	currentTrivia db.Trivia
-	triviaLock    sync.Mutex
-
 	imageRoundSleepDelay time.Duration
 	roundSleepDelay      time.Duration
 	questionSleepDelay   time.Duration
 	roundStartSleepDelay time.Duration
+
+	currentTrivia db.Trivia
+	triviaLock    sync.Mutex
+	audioBuffer   [][]byte
 }
 
-func (b *bot) Run() {
+func NewBot(
+	triviaHost *discordgo.Session,
+	triviaService triviaService,
+	triviaChannelID string,
+	commandChannelID string,
+	imageRoundSleepDelay time.Duration,
+	roundSleepDelay time.Duration,
+	questionSleepDelay time.Duration,
+	roundStartSleepDelay time.Duration,
+) *Bot {
+	return &Bot{
+		triviaHost:           triviaHost,
+		triviaService:        triviaService,
+		triviaChannelID:      triviaChannelID,
+		commandChannelID:     commandChannelID,
+		imageRoundSleepDelay: imageRoundSleepDelay,
+		roundSleepDelay:      roundSleepDelay,
+		questionSleepDelay:   questionSleepDelay,
+		roundStartSleepDelay: roundStartSleepDelay,
+		audioBuffer:          make([][]byte, 0),
+	}
+}
+
+func (b *Bot) Run() error {
 	b.triviaHost.AddHandler(b.messageCreateHandler)
+
+	//TODO: not sure we need this?
+	b.triviaHost.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildVoiceStates
+
+	err := b.triviaHost.Open()
+	if err != nil {
+		return fmt.Errorf("Error opening Discord session: %w", err)
+	}
+	defer b.triviaHost.Close()
+
+	slog.Info("Trivia Bot is now running")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	<-sc
+
+	return nil
 }
 
 // general func to listen for messages
-func (b *bot) messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (b *Bot) messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -79,17 +124,22 @@ func (b *bot) messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCre
 		"!answers":
 		//TODO
 	case "!next":
-		//TODO
+		if err := b.getNextTrivia(); err != nil {
+			slog.Error("eror fetching trivia", err)
+		}
 	case "!audio":
-		//TODO
+		if err := b.playAudio(); err != nil {
+			slog.Error("error running audio round", err)
+		}
 	case "!image":
 		//TODO
+	default:
 	}
 }
 
 // TODO: think about if we want to return for any error? If we miss 1 message it might be better to just log it? Perhaps create a budget,
 // if more than 5 messages fail we die
-func (b *bot) startTrivia() error {
+func (b *Bot) startTrivia() error {
 	if !b.triviaLock.TryLock() {
 		// TODO send message to botcommands to signify trivia in progress
 		return fmt.Errorf("trivia already in progress")
@@ -101,9 +151,9 @@ func (b *bot) startTrivia() error {
 	)
 
 	//Fetch Trivia
-	b.currentTrivia, err = b.triviaService.GetNewTrivia()
+	err = b.getNextTrivia()
 	if err != nil {
-		return fmt.Errorf("error retrieving trivia from db > %w", err)
+		return err
 	}
 
 	trivia = b.currentTrivia
@@ -236,7 +286,7 @@ func (b *bot) startTrivia() error {
 	return b.markTriviaUsed()
 }
 
-func (b *bot) hostMessageTriviaChannel(s string) error {
+func (b *Bot) hostMessageTriviaChannel(s string) error {
 	_, err := b.triviaHost.ChannelMessageSend(
 		b.triviaChannelID,
 		s,
@@ -244,6 +294,92 @@ func (b *bot) hostMessageTriviaChannel(s string) error {
 	return err
 }
 
-func (b *bot) markTriviaUsed() error {
-	return b.triviaService.MarkTriviaUsed(b.currentTrivia.Id)
+func (b *Bot) markTriviaUsed() error {
+	return b.triviaService.MarkTriviaUsed(context.Background(), b.currentTrivia.Id)
+}
+
+func (b *Bot) getNextTrivia() error {
+	var err error
+	b.currentTrivia, err = b.triviaService.GetNewTrivia(context.Background())
+	if err != nil {
+		return fmt.Errorf("error retrieving trivia from db > %w", err)
+	}
+	return nil
+}
+
+func (b *Bot) playAudio() error {
+	if b.currentTrivia.AudioFileName == "" {
+		return nil
+	}
+
+	if err := b.loadSound(); err != nil {
+		//TODO send message to channel that audio isn't working now?
+		return err
+	}
+
+	//TODO: would now want to spin up each audio bot and execute below code for each one
+
+	vc, err := b.triviaHost.ChannelVoiceJoin("", "", false, false)
+	if err != nil {
+		return err
+	}
+	defer vc.Disconnect()
+
+	vc.Speaking(true)
+
+	// Send the buffer data.
+	for _, buff := range b.audioBuffer {
+		vc.OpusSend <- buff
+	}
+
+	return nil
+}
+
+func (b *Bot) loadSound() error {
+	//TODO: probably want a mutex lock on this func
+
+	cmdString := fmt.Sprintf("ffmpeg -i %s -f s16le -ar 48000 -ac 2 pipe:1 | dca > audio.dca", b.currentTrivia.AudioFileName)
+	_, err := exec.Command(cmdString).Output()
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Open("audio.dca")
+	if err != nil {
+		return err
+	}
+
+	var opuslen int16
+
+	for {
+		// Read opus frame length from dca file.
+		err = binary.Read(file, binary.LittleEndian, &opuslen)
+
+		// If this is the end of the file, just return.
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			err := file.Close()
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		if err != nil {
+			fmt.Println("Error reading from dca file :", err)
+			return err
+		}
+
+		// Read encoded pcm from dca file.
+		InBuf := make([]byte, opuslen)
+		err = binary.Read(file, binary.LittleEndian, &InBuf)
+
+		// Should not be any end of file errors
+		if err != nil {
+			fmt.Println("Error reading from dca file :", err)
+			return err
+		}
+
+		// Append encoded pcm data to the buffer.
+		b.audioBuffer = append(b.audioBuffer, InBuf)
+	}
 }
