@@ -99,6 +99,7 @@ func getDBConnection(cfg config) *sql.DB {
 		cfg.DatabaseServer,
 		cfg.DatabaseName)
 
+	slog.Info("trying to connect to db")
 	db, err := sql.Open("postgres", dbConnStr)
 
 	check("sql.Open", err)
