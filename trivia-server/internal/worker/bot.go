@@ -86,8 +86,8 @@ func NewBot(
 func (b *Bot) Run() error {
 	b.triviaHost.AddHandler(b.messageCreateHandler)
 
-	//TODO: not sure we need this?
-	b.triviaHost.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildVoiceStates
+	//only care about receiving message events
+	b.triviaHost.Identify.Intents = discordgo.IntentsGuildMessages
 
 	err := b.triviaHost.Open()
 	if err != nil {
