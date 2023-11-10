@@ -10,6 +10,10 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_SERVER=${DB_SERVER} 
       - AUDIO_FILE_DIRECTORY=${AUDIO_FILE_DIRECTORY}
+      - TRIVIA_HOST_TOKEN=${TRIVIA_HOST_TOKEN}
+      - TRIVIA_CHANNEL_ID=${TRIVIA_CHANNEL_ID}
+      - COMMAND_CHANNEL_ID=${COMMAND_CHANNEL_ID}
+      - GUILD_ID=${GUILD_ID}
     ports: 
       - 8080:8080 
     restart: on-failure
@@ -19,7 +23,7 @@ services:
       - db
     networks:
       - fullstack
-      
+
   db:
     image: postgres:latest
     container_name: db_postgres
@@ -39,10 +43,12 @@ services:
     image: btlachac95/discord-trivia-bot-ui
     container_name: trivia-ui
     environment:
-      - API_URL=${API_URL}
+      - API_URL=http://server:8080
     ports: 
       - 5000:5000 
     restart: on-failure
+    depends_on:
+      - server
     networks:
       - fullstack
 

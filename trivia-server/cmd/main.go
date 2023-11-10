@@ -23,6 +23,7 @@ import (
 	"github.com/sethvargo/go-envconfig"
 )
 
+// TODO: these fields can be private
 type config struct {
 	AudioFileDirectory string `env:"AUDIO_FILE_DIRECTORY,required"`
 
@@ -31,9 +32,13 @@ type config struct {
 	DatabasePass   string `env:"DB_PASS,required"`
 	DatabaseServer string `env:"DB_SERVER,required"`
 
+	GuildID string `env:"GUILD_ID,required"`
+
 	TriviaHostToken  string `env:"TRIVIA_HOST_TOKEN,required"`
 	TriviaChannelID  string `env:"TRIVIA_CHANNEL_ID,required"`
 	CommandChannelID string `env:"COMMAND_CHANNEL_ID,required"`
+
+	AudioChannelID string `env:"AUDIO_CHANNEL_ID,required"`
 }
 
 func main() {
@@ -55,8 +60,10 @@ func main() {
 	bot := worker.NewBot(
 		hostBot,
 		ts,
+		cfg.GuildID,
 		cfg.TriviaChannelID,
 		cfg.CommandChannelID,
+		cfg.AudioChannelID,
 		0,
 		0,
 		0,
@@ -90,7 +97,7 @@ func getDBConnection(cfg config) *sql.DB {
 		cfg.DatabaseUser,
 		cfg.DatabasePass,
 		cfg.DatabaseServer,
-		cfg.DatabaseUser)
+		cfg.DatabaseName)
 
 	db, err := sql.Open("postgres", dbConnStr)
 

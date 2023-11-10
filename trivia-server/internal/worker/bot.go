@@ -40,8 +40,12 @@ type Bot struct {
 	triviaHost    *discordgo.Session
 	triviaService triviaService
 
+	guildID string
+
 	triviaChannelID  string
 	commandChannelID string
+
+	audioChannelID string
 
 	imageRoundSleepDelay time.Duration
 	roundSleepDelay      time.Duration
@@ -56,8 +60,10 @@ type Bot struct {
 func NewBot(
 	triviaHost *discordgo.Session,
 	triviaService triviaService,
+	guildID string,
 	triviaChannelID string,
 	commandChannelID string,
+	audioChannelID string,
 	imageRoundSleepDelay time.Duration,
 	roundSleepDelay time.Duration,
 	questionSleepDelay time.Duration,
@@ -66,13 +72,14 @@ func NewBot(
 	return &Bot{
 		triviaHost:           triviaHost,
 		triviaService:        triviaService,
+		guildID:              guildID,
 		triviaChannelID:      triviaChannelID,
 		commandChannelID:     commandChannelID,
+		audioChannelID:       audioChannelID,
 		imageRoundSleepDelay: imageRoundSleepDelay,
 		roundSleepDelay:      roundSleepDelay,
 		questionSleepDelay:   questionSleepDelay,
 		roundStartSleepDelay: roundStartSleepDelay,
-		audioBuffer:          make([][]byte, 0),
 	}
 }
 
@@ -319,7 +326,7 @@ func (b *Bot) playAudio() error {
 
 	//TODO: would now want to spin up each audio bot and execute below code for each one
 
-	vc, err := b.triviaHost.ChannelVoiceJoin("", "", false, false)
+	vc, err := b.triviaHost.ChannelVoiceJoin(b.guildID, b.audioChannelID, false, false)
 	if err != nil {
 		return err
 	}
@@ -352,6 +359,7 @@ func (b *Bot) loadSound() error {
 		return err
 	}
 
+	b.audioBuffer = make([][]byte, 0)
 	var opuslen int16
 
 	for {
