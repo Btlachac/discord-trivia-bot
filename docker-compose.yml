@@ -7,7 +7,7 @@ services:
       - DB_USER=${DB_USER}  
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
-      - DB_SERVER=${DB_SERVER} 
+      - DB_SERVER=db_postgres
       - AUDIO_FILE_DIRECTORY=${AUDIO_FILE_DIRECTORY}
       - TRIVIA_HOST_TOKEN=${TRIVIA_HOST_TOKEN}
       - TRIVIA_CHANNEL_ID=${TRIVIA_CHANNEL_ID}
@@ -31,9 +31,8 @@ services:
       - POSTGRES_USER=${DB_USER}  
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_SERVER} 
     ports:
-      - 54321:5432
+      - "5432:5432"
     volumes:
       - database_postgres:/var/lib/postgresql/data
     networks:
@@ -43,7 +42,7 @@ services:
     image: btlachac95/discord-trivia-bot-ui
     container_name: trivia-ui
     environment:
-      - API_URL=http://server:8080
+      - API_URL=http://trivia-server:8080
     ports: 
       - 5000:5000 
     restart: on-failure
@@ -51,15 +50,6 @@ services:
       - server
     networks:
       - fullstack
-
-  # bots:
-  #   container_name: trivia-bots
-  #   environment:
-  #     - API_URL=${API_URL}
-  #   build: ./trivia-bots
-  #   restart: on-failure
-  #   networks:
-  #     - fullstack
 
 volumes:
   api:

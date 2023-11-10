@@ -105,6 +105,7 @@ func (b *Bot) Run() error {
 
 // general func to listen for messages
 func (b *Bot) messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	slog.Info("message received")
 	// Ignore all messages created by the bot itself
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -131,10 +132,12 @@ func (b *Bot) messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCre
 		"!answers":
 		//TODO
 	case "!next":
+		slog.Info("next command issued")
 		if err := b.getNextTrivia(); err != nil {
 			slog.Error("eror fetching trivia", err)
 		}
 	case "!audio":
+		slog.Info("audio command issued")
 		if err := b.playAudio(); err != nil {
 			slog.Error("error running audio round", err)
 		}
