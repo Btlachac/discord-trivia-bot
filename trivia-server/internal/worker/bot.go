@@ -323,9 +323,12 @@ func (b *Bot) playAudio() error {
 	if err != nil {
 		return err
 	}
+	//nolint
 	defer vc.Disconnect()
 
-	vc.Speaking(true)
+	if err = vc.Speaking(true); err != nil {
+		return err
+	}
 
 	// Send the buffer data.
 	for _, buff := range b.audioBuffer {
