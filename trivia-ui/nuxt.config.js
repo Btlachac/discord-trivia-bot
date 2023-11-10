@@ -4,6 +4,10 @@ export default {
   // Disable server-side rendering (https://go.nuxtjs.dev/ssr-mode)
   ssr: false,
 
+  // publicRuntimeConfig: {
+  //   API_URL: process.env.API_URL,
+  // },
+
   env: {
     API_URL: process.env.API_URL
   },
@@ -41,7 +45,7 @@ export default {
 
   // Modules (https://go.nuxtjs.dev/config-modules)
   modules: [
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
   ],
 
   axios: {
