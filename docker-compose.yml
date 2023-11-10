@@ -1,4 +1,3 @@
-
 version: '3'
 services:
   server:
@@ -14,6 +13,7 @@ services:
       - TRIVIA_CHANNEL_ID=${TRIVIA_CHANNEL_ID}
       - COMMAND_CHANNEL_ID=${COMMAND_CHANNEL_ID}
       - GUILD_ID=${GUILD_ID}
+      - AUDIO_CHANNEL_ID=${AUDIO_CHANNEL_ID}
     ports: 
       - 8080:8080 
     restart: on-failure
