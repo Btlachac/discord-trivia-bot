@@ -105,14 +105,16 @@ func (b *Bot) Run() error {
 
 // general func to listen for messages
 func (b *Bot) messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
-	slog.Info("message received")
+	slog.Info("message received", "message", m.Content)
 	// Ignore all messages created by the bot itself
 	if m.Author.ID == s.State.User.ID {
+		slog.Info("message from bot - ignore")
 		return
 	}
 
 	// Ignore messages not in the bot commands channel
 	if m.ChannelID != b.commandChannelID {
+		slog.Info("message not in commands channel - ignore", "channel_id", b.commandChannelID)
 		return
 	}
 
@@ -144,6 +146,7 @@ func (b *Bot) messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCre
 	case "!image":
 		//TODO
 	default:
+		slog.Info("command unknown", "message", message)
 	}
 }
 
