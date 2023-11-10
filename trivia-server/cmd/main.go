@@ -88,7 +88,7 @@ func main() {
 
 func check(desc string, err error) {
 	if err != nil {
-		log.Fatal(fmt.Sprintf("%s -> %s", desc, err.Error()))
+		log.Fatalf("%s -> %s", desc, err.Error())
 	}
 }
 
