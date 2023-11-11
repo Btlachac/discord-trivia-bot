@@ -48,8 +48,9 @@ export default {
     '@nuxtjs/axios',
   ],
 
+  //TODO: undo
   axios: {
-    baseURL: process.env.API_URL
+    baseURL: "http://localhost:8080"
   },
 
   // Vuetify module configuration (https://go.nuxtjs.dev/config-vuetify)
