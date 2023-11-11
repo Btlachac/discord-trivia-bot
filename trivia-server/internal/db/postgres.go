@@ -151,7 +151,7 @@ func (r *TriviaRepository) GetNewTrivia(ctx context.Context) (Trivia, string, er
 		audioFileName = audioFileNameHolder.String
 	}
 
-	trivia.Rounds, err = getRounds(ctx, tx, trivia.Id)
+	trivia.Rounds, err = r.getRounds(ctx, trivia.Id)
 	if err != nil {
 		return Trivia{}, "", err
 	}
@@ -163,7 +163,7 @@ func (r *TriviaRepository) GetNewTrivia(ctx context.Context) (Trivia, string, er
 	return trivia, audioFileName, nil
 }
 
-func getRounds(ctx context.Context, tx *sql.Tx, triviaId int64) ([]Round, error) {
+func (r *TriviaRepository) getRounds(ctx context.Context, triviaId int64) ([]Round, error) {
 	selectRoundsStatement := `
 	SELECT r.id, r.round_number, r.theme, r.theme_description, rt.name
 	FROM dt.round r JOIN dt.round_type rt ON r.round_type_id = rt.id
@@ -171,7 +171,7 @@ func getRounds(ctx context.Context, tx *sql.Tx, triviaId int64) ([]Round, error)
 	ORDER BY r.round_number ASC
 	`
 	var rounds []Round
-	rows, err := tx.QueryContext(ctx, selectRoundsStatement, triviaId)
+	rows, err := r.db.QueryContext(ctx, selectRoundsStatement, triviaId)
 	if err != nil {
 		return rounds, err
 	}
@@ -185,7 +185,7 @@ func getRounds(ctx context.Context, tx *sql.Tx, triviaId int64) ([]Round, error)
 			return rounds, err
 		}
 
-		round.Questions, err = getQuestions(ctx, tx, round.Id)
+		round.Questions, err = r.getQuestions(ctx, tx, round.Id)
 		if err != nil {
 			return rounds, err
 		}
@@ -196,7 +196,7 @@ func getRounds(ctx context.Context, tx *sql.Tx, triviaId int64) ([]Round, error)
 	return rounds, nil
 }
 
-func getQuestions(ctx context.Context, tx *sql.Tx, roundId int64) ([]Question, error) {
+func (r *TriviaRepository) getQuestions(ctx context.Context, tx *sql.Tx, roundId int64) ([]Question, error) {
 	selectQuestionsStatement := `
   SELECT question_number, question
   FROM dt.question
@@ -205,7 +205,7 @@ func getQuestions(ctx context.Context, tx *sql.Tx, roundId int64) ([]Question, e
   `
 	var questions []Question
 
-	rows, err := tx.QueryContext(ctx, selectQuestionsStatement, roundId)
+	rows, err := r.db.QueryContext(ctx, selectQuestionsStatement, roundId)
 	if err != nil {
 		return questions, err
 	}

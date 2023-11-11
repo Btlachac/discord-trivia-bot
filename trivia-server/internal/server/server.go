@@ -16,6 +16,8 @@ type Server struct {
 	router        *mux.Router
 }
 
+//TODO: add logging on each request
+
 type triviaService interface {
 	//TODO
 	// GetNewTrivia() (model.Trivia, error)
