@@ -26,15 +26,13 @@ func (r *TriviaRepository) AddTrivia(ctx context.Context, newTrivia Trivia, audi
 
 	insertTriviaStatement := `
   INSERT INTO dt.trivia(image_round_theme, image_round_detail, image_round_url, audio_round_theme, answer_url, audio_file_name)
-  VALUES($1, $2, $3, $4, $5, $6)`
+  VALUES($1, $2, $3, $4, $5, $6)
+  RETURNING id`
 
-	result, err := tx.ExecContext(ctx, insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName)
-	if err != nil {
-		return err
-	}
+	var triviaID int64
+	row := tx.QueryRowContext(ctx, insertTriviaStatement, newTrivia.ImageRoundTheme, newTrivia.ImageRoundDetail, newTrivia.ImageRoundURL, newTrivia.AudioRoundTheme, newTrivia.AnswersURL, audioFileName)
 
-	triviaID, err := result.LastInsertId()
-	if err != nil {
+	if err := row.Scan(&triviaID); err != nil {
 		return err
 	}
 
@@ -51,20 +49,18 @@ func (r *TriviaRepository) AddTrivia(ctx context.Context, newTrivia Trivia, audi
 func addRound(ctx context.Context, tx *sql.Tx, newRound Round, triviaId int64) error {
 	insertRoundStatement := `
   INSERT INTO dt.round(trivia_id, round_number, theme, theme_description, round_type_id)
-  VALUES($1, $2, $3, $4, $5)`
+  VALUES($1, $2, $3, $4, $5)
+  RETURNING id`
 
-	result, err := tx.ExecContext(ctx, insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription, newRound.RoundType.Id)
-	if err != nil {
-		return err
-	}
+	var roundID int64
+	row := tx.QueryRowContext(ctx, insertRoundStatement, triviaId, newRound.RoundNumber, newRound.Theme, newRound.ThemeDescription, newRound.RoundType.Id)
 
-	roundID, err := result.LastInsertId()
-	if err != nil {
+	if err := row.Scan(&roundID); err != nil {
 		return err
 	}
 
 	for _, question := range newRound.Questions {
-		err = addQuestion(ctx, tx, question, roundID)
+		err := addQuestion(ctx, tx, question, roundID)
 		if err != nil {
 			return err
 		}
