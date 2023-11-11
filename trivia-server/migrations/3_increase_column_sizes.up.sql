@@ -1,0 +1,5 @@
+ALTER TABLE dt.round
+ALTER COLUMN theme TYPE VARCHAR(1200);
+
+ALTER TABLE dt.round
+ALTER COLUMN theme_description TYPE VARCHAR(1200);

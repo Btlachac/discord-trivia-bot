@@ -42,7 +42,7 @@ export default {
     roundTypes: []
   }),
   async fetch() {
-    this.roundTypes = await this.$axios.$get("/trivia/roundTypes");
+    this.roundTypes = await this.$axios.$get("trivia/roundTypes");
     console.log(this.roundTypes);
   },
   computed: {
