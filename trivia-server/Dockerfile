@@ -1,25 +1,19 @@
-FROM golang:alpine as builder
+FROM golang:1.21 as builder
 
-RUN apk update && apk add --no-cache git
+# ENV CGO_ENABLED 0
 
-WORKDIR /app
+#Install Dependencies
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y ffmpeg
+RUN go install github.com/bwmarrin/dca/cmd/dca@latest
 
-COPY go.mod go.sum ./
+WORKDIR /src
 
-RUN go mod download 
+ADD . /src
 
-COPY . .
+RUN go build -o /app ./cmd/main.go
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-
-WORKDIR /root/
-
-COPY --from=builder /app/main .
-COPY --from=builder /app/migrations ./migrations
-     
 EXPOSE 8080
 
-CMD ["./main"]
+CMD ["/app"]

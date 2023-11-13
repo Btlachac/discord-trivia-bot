@@ -1,15 +1,19 @@
-
 version: '3'
 services:
   server:
+    image: btlachac95/discord-trivia-bot-server
     container_name: trivia-server
     environment:
       - DB_USER=${DB_USER}  
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
-      - DB_SERVER=${DB_SERVER} 
+      - DB_SERVER=db_postgres
       - AUDIO_FILE_DIRECTORY=${AUDIO_FILE_DIRECTORY}
-    build: ./trivia-server
+      - TRIVIA_HOST_TOKEN=${TRIVIA_HOST_TOKEN}
+      - TRIVIA_CHANNEL_ID=${TRIVIA_CHANNEL_ID}
+      - COMMAND_CHANNEL_ID=${COMMAND_CHANNEL_ID}
+      - GUILD_ID=${GUILD_ID}
+      - AUDIO_CHANNEL_ID=${AUDIO_CHANNEL_ID}
     ports: 
       - 8080:8080 
     restart: on-failure
@@ -19,7 +23,7 @@ services:
       - db
     networks:
       - fullstack
-      
+
   db:
     image: postgres:latest
     container_name: db_postgres
@@ -27,32 +31,23 @@ services:
       - POSTGRES_USER=${DB_USER}  
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_SERVER} 
     ports:
-      - 54321:5432
+      - "5432:5432"
     volumes:
       - database_postgres:/var/lib/postgresql/data
     networks:
       - fullstack
       
   ui:
+    image: btlachac95/discord-trivia-bot-ui
     container_name: trivia-ui
-    build: 
-      context: ./trivia-ui
-      args:
-        - API_URL=${API_URL}
+    environment:
+      - API_URL=http://trivia-server:8080
     ports: 
       - 5000:5000 
     restart: on-failure
-    networks:
-      - fullstack
-
-  bots:
-    container_name: trivia-bots
-    environment:
-      - API_URL=${API_URL}
-    build: ./trivia-bots
-    restart: on-failure
+    depends_on:
+      - server
     networks:
       - fullstack
 

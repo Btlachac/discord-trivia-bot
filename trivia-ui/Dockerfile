@@ -1,11 +1,13 @@
 FROM node:latest
 
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
 # create destination directory
 RUN mkdir -p /trivia-ui
 WORKDIR /trivia-ui
 
-ARG API_URL
-ENV API_URL=$API_URL
+# ARG API_URL
+# ENV API_URL=$API_URL
 
 # copy the app, note .dockerignore
 COPY . /trivia-ui
