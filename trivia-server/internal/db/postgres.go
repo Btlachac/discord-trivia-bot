@@ -185,7 +185,7 @@ func (r *TriviaRepository) getRounds(ctx context.Context, triviaId int64) ([]Rou
 			return rounds, err
 		}
 
-		round.Questions, err = r.getQuestions(ctx, tx, round.Id)
+		round.Questions, err = r.getQuestions(ctx, round.Id)
 		if err != nil {
 			return rounds, err
 		}
@@ -196,7 +196,7 @@ func (r *TriviaRepository) getRounds(ctx context.Context, triviaId int64) ([]Rou
 	return rounds, nil
 }
 
-func (r *TriviaRepository) getQuestions(ctx context.Context, tx *sql.Tx, roundId int64) ([]Question, error) {
+func (r *TriviaRepository) getQuestions(ctx context.Context, roundId int64) ([]Question, error) {
 	selectQuestionsStatement := `
   SELECT question_number, question
   FROM dt.question
